@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/pulse.css">
+</head>
+<body>
+<main class="shell">
+    <header class="topbar">
+        <div class="brand">Pulse <span>/</span> Monitor</div>
+
+        <nav class="top-nav" aria-label="pages">
+            <button id="menuSql" class="top-nav-btn active">SQL Monitor</button>
+            <button id="menuHttp" class="top-nav-btn">Endpoint Performance</button>
+        </nav>
+
+        <div class="retention" id="retentionLabel">Data retention: 15 minutes</div>
+    </header>
+
+    <section class="controls">
+        <div class="chip">
+            <span class="muted">App</span>
+            <span id="appName">Monitored Application</span>
+        </div>
+
+        <div class="chip search">
+            <span class="muted">Search</span>
+            <input id="searchInput" placeholder="sql, endpoint, stack frame">
+        </div>
+
+        <div class="chip right refresh">
+            <div class="refresh-meta">
+                <svg id="refreshIcon" class="refresh-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M20 4v5h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="muted">Refresh</span>
+            </div>
+            <div class="refresh-select-wrap">
+                <select id="interval" class="refresh-select">
+                    <option value="1000">1s</option>
+                    <option value="3000" selected>3s</option>
+                    <option value="5000">5s</option>
+                    <option value="10000">10s</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="timeline-wrap" id="sqlTimelineWrap">
+        <div class="timeline-labels">
+            <span id="tick1">-</span>
+            <span id="tick2">-</span>
+            <span id="tick3">-</span>
+            <span id="tick4">-</span>
+            <span id="tick5">-</span>
+            <span id="tick6">-</span>
+        </div>
+        <div id="timelineBars" class="timeline-bars"></div>
+    </section>
+
+    <section id="sqlView" class="view grid">
+        <aside class="col">
+            <div class="panel-title">
+                <strong>Completions</strong>
+                <span class="muted" id="sqlTotalEvents">0 events</span>
+            </div>
+            <div id="recentList" class="list"></div>
+        </aside>
+
+        <section class="center col">
+            <div class="panel-title">
+                <strong id="selectedTitle">SQL Execution</strong>
+                <span id="selectedAgo" class="muted">-</span>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="value" id="mDuration">0 ms</div>
+                    <div class="label">Time to complete</div>
+                </div>
+                <div class="metric">
+                    <div class="value" id="mFreq">0</div>
+                    <div class="label">Occurrences</div>
+                </div>
+                <div class="metric">
+                    <div class="value" id="mErrors">0</div>
+                    <div class="label">Errors</div>
+                </div>
+            </div>
+
+            <article class="sql-block">
+                <div class="sql-head">Normalized SQL</div>
+                <div id="sqlBody" class="sql-body">No query selected.</div>
+            </article>
+
+            <article class="sql-block" style="margin-bottom:16px;">
+                <div class="sql-head">Spring Context</div>
+                <div id="contextBody" class="sql-body context-body">endpoint: -
+thread: -
+traceId: -
+status: -
+exception: -</div>
+            </article>
+        </section>
+
+        <aside class="col">
+            <div class="panel-title">
+                <strong>Trace Timeline</strong>
+                <div class="trace-tools">
+                    <label class="muted" for="traceSort">Sort</label>
+                    <select id="traceSort" class="trace-sort">
+                        <option value="desc" selected>Longest first</option>
+                        <option value="asc">Shortest first</option>
+                    </select>
+                    <span class="muted" id="sqlMaxSlow">max 0 ms</span>
+                </div>
+            </div>
+            <div id="traceList" class="traces"></div>
+        </aside>
+    </section>
+
+    <section id="httpView" class="view grid hidden">
+        <aside class="col">
+            <div class="panel-title">
+                <strong>Endpoints</strong>
+                <span class="muted" id="httpTotalEvents">0 calls</span>
+            </div>
+            <div id="endpointList" class="list"></div>
+        </aside>
+
+        <section class="center col">
+            <div class="panel-title">
+                <strong id="httpSelectedEndpoint">HTTP(s) calls</strong>
+                <span class="muted" id="httpSelectedStats">-</span>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="value" id="httpP95">0 ms</div>
+                    <div class="label">P95 latency</div>
+                </div>
+                <div class="metric">
+                    <div class="value" id="httpAvg">0 ms</div>
+                    <div class="label">Average latency</div>
+                </div>
+                <div class="metric">
+                    <div class="value" id="httpErrors">0</div>
+                    <div class="label">Errors</div>
+                </div>
+            </div>
+
+            <article class="sql-block" style="margin-bottom:16px;">
+                <div class="sql-head">Recent HTTP calls (click one to inspect full Java stack profile)</div>
+                <div id="httpCallList" class="list compact-list"></div>
+            </article>
+        </section>
+
+        <aside class="col">
+            <div class="panel-title">
+                <strong>Slow Calls Details</strong>
+                <span class="muted" id="httpSlowHint">Click a slow call</span>
+            </div>
+            <div id="slowCallList" class="traces"></div>
+            <article class="sql-block no-top-margin">
+                <div class="sql-head">Java stack hotspots</div>
+                <div id="httpHotspots" class="traces compact-traces"></div>
+            </article>
+            <article class="sql-block">
+                <div class="sql-head">Sampled call stacks</div>
+                <div id="httpStacks" class="traces compact-traces"></div>
+            </article>
+        </aside>
+    </section>
+</main>
+
+<script src="/assets/pulse.js"></script>
+</body>
+</html>
