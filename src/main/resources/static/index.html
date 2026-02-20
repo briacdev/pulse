@@ -15,8 +15,9 @@
         <div class="brand">Pulse <span>/</span> Monitor</div>
 
         <nav class="top-nav" aria-label="pages">
-            <button id="menuSql" class="top-nav-btn active">SQL Monitor</button>
-            <button id="menuHttp" class="top-nav-btn">Endpoint Performance</button>
+            <button id="menuHttp" class="top-nav-btn active">Endpoint</button>
+            <button id="menuSql" class="top-nav-btn">Database</button>
+            <button id="menuJvm" class="top-nav-btn">JVM</button>
         </nav>
 
         <div class="retention" id="retentionLabel">Data retention: 15 minutes</div>
@@ -175,8 +176,75 @@ exception: -</div>
             </article>
         </aside>
     </section>
+
+    <section id="jvmView" class="view hidden jvm-view">
+        <div class="jvm-grid">
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>Heap usage</strong>
+                    <span class="muted" id="jvmHeapValue">0%</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmHeapMeta">0 MB / 0 MB</div>
+                <div class="jvm-chart" id="jvmHeapChart"></div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>CPU usage</strong>
+                    <span class="muted" id="jvmCpuValue">0%</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmCpuMeta">process CPU time 0 ms</div>
+                <div class="jvm-chart" id="jvmCpuChart"></div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>Thread count</strong>
+                    <span class="muted" id="jvmThreadValue">0</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmThreadMeta">peak 0</div>
+                <div class="jvm-chart" id="jvmThreadChart"></div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>GC count + pause time</strong>
+                    <span class="muted" id="jvmGcValue">0 / 0 ms</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmGcMeta">delta +0 / +0 ms</div>
+                <div class="jvm-chart dual-chart">
+                    <div class="dual-line">
+                        <span class="muted">Count</span>
+                        <div id="jvmGcCountChart"></div>
+                    </div>
+                    <div class="dual-line">
+                        <span class="muted">Pause</span>
+                        <div id="jvmGcPauseChart"></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>Request latency</strong>
+                    <span class="muted" id="jvmLatencyValue">0 ms</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmLatencyMeta">p95 0 ms</div>
+                <div class="jvm-chart" id="jvmLatencyChart"></div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <strong>Error rate</strong>
+                    <span class="muted" id="jvmErrorRateValue">0%</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmErrorRateMeta">throughput 0 req/s</div>
+                <div class="jvm-chart" id="jvmErrorRateChart"></div>
+            </article>
+        </div>
+    </section>
 </main>
 
-<script src="/assets/pulse.js"></script>
+<script type="module" src="/assets/js/app.js"></script>
 </body>
 </html>

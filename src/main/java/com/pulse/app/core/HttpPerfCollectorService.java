@@ -73,6 +73,11 @@ public class HttpPerfCollectorService {
         return detailsById.get(id);
     }
 
+    public List<HttpRequestEvent> allEvents() {
+        trim();
+        return new ArrayList<>(events);
+    }
+
     private List<HttpEndpointAggregate> aggregateByEndpoint(List<HttpRequestEvent> source) {
         Map<String, EndpointMutable> grouped = new HashMap<>();
 
