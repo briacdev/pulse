@@ -4,9 +4,9 @@ import net.bytebuddy.asm.Advice;
 
 import java.util.Map;
 
-public final class DispatcherServletAdvice {
+public final class WebTransactionAdvice {
 
-    private DispatcherServletAdvice() {
+    private WebTransactionAdvice() {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

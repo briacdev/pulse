@@ -6,6 +6,7 @@ public final class PulseRuntime {
     private static volatile SqlCollectorService collector = new SqlCollectorService(config);
     private static volatile HttpPerfCollectorService httpCollector = new HttpPerfCollectorService(config);
     private static volatile JvmMetricsService jvmMetrics = new JvmMetricsService(config);
+    private static volatile String monitoredAppName = config.appName();
     private static volatile HttpStackProfilerService httpStackProfiler = new HttpStackProfilerService();
 
     private PulseRuntime() {
@@ -16,8 +17,8 @@ public final class PulseRuntime {
         collector = new SqlCollectorService(pulseConfig);
         httpCollector = new HttpPerfCollectorService(pulseConfig);
         jvmMetrics = new JvmMetricsService(pulseConfig);
+        monitoredAppName = pulseConfig.appName();
         httpStackProfiler = new HttpStackProfilerService();
-        PulseOpenTelemetry.initialize(pulseConfig);
     }
 
     public static PulseConfig getConfig() {
@@ -34,6 +35,17 @@ public final class PulseRuntime {
 
     public static JvmMetricsService getJvmMetrics() {
         return jvmMetrics;
+    }
+
+    public static String monitoredAppName() {
+        return monitoredAppName;
+    }
+
+    public static void updateMonitoredAppName(String name) {
+        if (name == null || name.isBlank()) {
+            return;
+        }
+        monitoredAppName = name;
     }
 
     public static HttpStackProfilerService getHttpStackProfiler() {

@@ -28,7 +28,7 @@ public class SqlMetricsController {
                 "slowQueryThresholdMs", config.slowQueryThresholdMs(),
                 "slowHttpThresholdMs", config.slowHttpThresholdMs(),
                 "bindAddress", config.bindAddress(),
-                "appName", config.appName()
+                "appName", PulseRuntime.monitoredAppName()
         ));
     }
 }

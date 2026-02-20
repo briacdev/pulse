@@ -250,4 +250,5 @@ public record PulseConfig(
             return fallback;
         }
     }
+
 }

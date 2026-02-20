@@ -1,8 +1,9 @@
 package com.pulse.agent;
 
-import com.pulse.agent.instrumentation.DispatcherServletAdvice;
 import com.pulse.agent.instrumentation.PrepareStatementAdvice;
+import com.pulse.agent.instrumentation.DispatcherServletAdvice;
 import com.pulse.agent.instrumentation.StatementExecutionAdvice;
+import com.pulse.agent.instrumentation.WebTransactionAdvice;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -32,6 +33,7 @@ public final class PulseInstrumentationInstaller {
     private static final AtomicLong IGNORED = new AtomicLong();
     private static final AtomicLong ERRORS = new AtomicLong();
     private static final AtomicLong HTTP_TRANSFORMED = new AtomicLong();
+    private static final AtomicLong SQL_TRANSFORMED = new AtomicLong();
     private static final Object HTTP_TYPES_LOCK = new Object();
     private static final ArrayDeque<String> HTTP_TYPES = new ArrayDeque<>();
     private static volatile String lastError = "";
@@ -67,27 +69,12 @@ public final class PulseInstrumentationInstaller {
         builder = builder
                 .type(named("org.springframework.web.servlet.DispatcherServlet"))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
-                        .visit(Advice.to(DispatcherServletAdvice.class).on(named("doDispatch")
-                                .or(named("doService"))
-                                .or(named("service")))));
+                        .visit(Advice.to(DispatcherServletAdvice.class).on(named("doDispatch").and(takesArguments(2)))));
 
         builder = builder
-                .type(named("org.springframework.web.servlet.FrameworkServlet"))
+                .type(named("jakarta.servlet.http.HttpServlet"))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
-                        .visit(Advice.to(DispatcherServletAdvice.class).on(named("processRequest")
-                                .or(named("doService"))
-                                .or(named("service")))));
-
-        builder = builder
-                .type(hasSuperType(named("jakarta.servlet.http.HttpServlet")).and(not(isInterface())))
-                .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
-                        .visit(Advice.to(DispatcherServletAdvice.class).on(named("service")
-                                .or(named("doService")))));
-
-        builder = builder
-                .type(named("org.apache.catalina.core.ApplicationFilterChain"))
-                .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
-                        .visit(Advice.to(DispatcherServletAdvice.class).on(named("doFilter"))));
+                        .visit(Advice.to(WebTransactionAdvice.class).on(named("service").and(takesArguments(2)))));
 
         AgentBuilder.Listener listener = new AgentBuilder.Listener() {
             @Override
@@ -102,6 +89,9 @@ public final class PulseInstrumentationInstaller {
                 if (isHttpTarget(typeName)) {
                     HTTP_TRANSFORMED.incrementAndGet();
                     rememberHttpType(typeName);
+                }
+                if (isSqlTarget(typeName)) {
+                    SQL_TRANSFORMED.incrementAndGet();
                 }
             }
 
@@ -135,6 +125,7 @@ public final class PulseInstrumentationInstaller {
         output.put("agentIgnored", IGNORED.get());
         output.put("agentErrors", ERRORS.get());
         output.put("agentHttpTransformed", HTTP_TRANSFORMED.get());
+        output.put("agentSqlTransformed", SQL_TRANSFORMED.get());
         output.put("agentHttpTypes", recentHttpTypes());
         output.put("agentLastError", lastError);
         return output;
@@ -160,6 +151,15 @@ public final class PulseInstrumentationInstaller {
                 || "org.springframework.web.servlet.FrameworkServlet".equals(typeName)
                 || "jakarta.servlet.http.HttpServlet".equals(typeName)
                 || "org.apache.catalina.core.ApplicationFilterChain".equals(typeName)
+                || "org.apache.catalina.core.StandardWrapperValve".equals(typeName)
+                || "org.apache.catalina.connector.CoyoteAdapter".equals(typeName)
                 || typeName.startsWith("org.springframework.web.servlet.");
+    }
+
+    private static boolean isSqlTarget(String typeName) {
+        return typeName != null
+                && (typeName.startsWith("java.sql.")
+                || typeName.startsWith("org.h2.")
+                || typeName.startsWith("com.zaxxer.hikari."));
     }
 }
