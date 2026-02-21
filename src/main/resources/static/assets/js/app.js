@@ -1,6 +1,7 @@
 import { createSqlView } from "./views/sqlView.js";
 import { createHttpView } from "./views/httpView.js";
 import { createJvmView } from "./views/jvmView.js";
+import { initInfoModal } from "./components/infoModal.js";
 
 (() => {
     const state = {
@@ -13,6 +14,7 @@ import { createJvmView } from "./views/jvmView.js";
         selectedSqlIndex: 0,
         selectedEndpoint: null,
         selectedHttpCallId: null,
+        lastHttpDetailId: null,
         traceSort: "desc",
         pollTimer: null,
         spinTimer: null
@@ -29,8 +31,9 @@ import { createJvmView } from "./views/jvmView.js";
         retentionLabel: document.getElementById("retentionLabel"),
         appName: document.getElementById("appName"),
         searchInput: document.getElementById("searchInput"),
+        searchChip: document.getElementById("searchInput").closest(".chip.search"),
         interval: document.getElementById("interval"),
-        refreshIcon: document.getElementById("refreshIcon"),
+        refreshSpinHost: document.getElementById("refreshSpinHost"),
         traceSort: document.getElementById("traceSort"),
 
         tick1: document.getElementById("tick1"),
@@ -57,10 +60,12 @@ import { createJvmView } from "./views/jvmView.js";
         endpointList: document.getElementById("endpointList"),
         httpSelectedEndpoint: document.getElementById("httpSelectedEndpoint"),
         httpSelectedStats: document.getElementById("httpSelectedStats"),
-        httpP95: document.getElementById("httpP95"),
-        httpAvg: document.getElementById("httpAvg"),
+        httpDuration: document.getElementById("httpDuration"),
+        httpFreq: document.getElementById("httpFreq"),
         httpErrors: document.getElementById("httpErrors"),
-        httpCallList: document.getElementById("httpCallList"),
+        httpRequestBody: document.getElementById("httpRequestBody"),
+        httpContextBody: document.getElementById("httpContextBody"),
+        httpTraceSort: document.getElementById("httpTraceSort"),
         slowCallList: document.getElementById("slowCallList"),
         httpHotspots: document.getElementById("httpHotspots"),
         httpStacks: document.getElementById("httpStacks"),
@@ -75,16 +80,15 @@ import { createJvmView } from "./views/jvmView.js";
         jvmThreadValue: document.getElementById("jvmThreadValue"),
         jvmThreadMeta: document.getElementById("jvmThreadMeta"),
         jvmThreadChart: document.getElementById("jvmThreadChart"),
-        jvmGcValue: document.getElementById("jvmGcValue"),
-        jvmGcMeta: document.getElementById("jvmGcMeta"),
+        jvmGcCountValue: document.getElementById("jvmGcCountValue"),
+        jvmGcCountMeta: document.getElementById("jvmGcCountMeta"),
         jvmGcCountChart: document.getElementById("jvmGcCountChart"),
+        jvmGcPauseValue: document.getElementById("jvmGcPauseValue"),
+        jvmGcPauseMeta: document.getElementById("jvmGcPauseMeta"),
         jvmGcPauseChart: document.getElementById("jvmGcPauseChart"),
         jvmLatencyValue: document.getElementById("jvmLatencyValue"),
         jvmLatencyMeta: document.getElementById("jvmLatencyMeta"),
-        jvmLatencyChart: document.getElementById("jvmLatencyChart"),
-        jvmErrorRateValue: document.getElementById("jvmErrorRateValue"),
-        jvmErrorRateMeta: document.getElementById("jvmErrorRateMeta"),
-        jvmErrorRateChart: document.getElementById("jvmErrorRateChart")
+        jvmLatencyChart: document.getElementById("jvmLatencyChart")
     };
 
     function getSearchQuery() {
@@ -100,9 +104,12 @@ import { createJvmView } from "./views/jvmView.js";
     }
 
     function triggerRefreshSpin() {
-        ui.refreshIcon.classList.remove("spin");
-        void ui.refreshIcon.offsetWidth;
-        ui.refreshIcon.classList.add("spin");
+        if (!ui.refreshSpinHost) {
+            return;
+        }
+        ui.refreshSpinHost.classList.remove("spin");
+        void ui.refreshSpinHost.offsetWidth;
+        ui.refreshSpinHost.classList.add("spin");
     }
 
     const sqlView = createSqlView(ui, state, getSearchQuery);
@@ -115,9 +122,10 @@ import { createJvmView } from "./views/jvmView.js";
         ui.menuHttp.classList.toggle("active", view === "http");
         ui.menuJvm.classList.toggle("active", view === "jvm");
         ui.sqlView.classList.toggle("hidden", view !== "sql");
-        ui.sqlTimelineWrap.classList.toggle("hidden", view !== "sql");
+        ui.sqlTimelineWrap.classList.toggle("hidden", view === "jvm");
         ui.httpView.classList.toggle("hidden", view !== "http");
         ui.jvmView.classList.toggle("hidden", view !== "jvm");
+        ui.searchChip.classList.toggle("hidden", view === "jvm");
 
         if (view === "sql" && state.lastSqlSnapshot) {
             sqlView.render(state.lastSqlSnapshot);
@@ -148,9 +156,17 @@ import { createJvmView } from "./views/jvmView.js";
             getJson("/api/jvm/snapshot")
         ]);
 
-        sqlView.render(sqlSnapshot);
-        httpView.render(httpSnapshot);
-        jvmView.render(jvmSnapshot);
+        state.lastSqlSnapshot = sqlSnapshot;
+        state.lastHttpSnapshot = httpSnapshot;
+        state.lastJvmSnapshot = jvmSnapshot;
+
+        if (state.activeView === "sql") {
+            sqlView.render(sqlSnapshot);
+        } else if (state.activeView === "http") {
+            httpView.render(httpSnapshot);
+        } else if (state.activeView === "jvm") {
+            jvmView.render(jvmSnapshot);
+        }
     }
 
     function startPolling() {
@@ -174,10 +190,10 @@ import { createJvmView } from "./views/jvmView.js";
 
         ui.interval.addEventListener("change", startPolling);
         ui.searchInput.addEventListener("input", () => {
-            if (state.lastSqlSnapshot) {
+            if (state.activeView === "sql" && state.lastSqlSnapshot) {
                 sqlView.render(state.lastSqlSnapshot);
             }
-            if (state.lastHttpSnapshot) {
+            if (state.activeView === "http" && state.lastHttpSnapshot) {
                 httpView.render(state.lastHttpSnapshot);
             }
         });
@@ -188,9 +204,20 @@ import { createJvmView } from "./views/jvmView.js";
                 sqlView.render(state.lastSqlSnapshot);
             }
         });
+
+        ui.httpTraceSort.addEventListener("change", () => {
+            if (state.lastHttpSnapshot) {
+                httpView.render(state.lastHttpSnapshot);
+            }
+        });
     }
 
     async function bootstrap() {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
+
+        initInfoModal();
         bindEvents();
         httpView.clearTraceDetail();
         setView("http");

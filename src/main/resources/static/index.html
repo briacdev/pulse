@@ -12,7 +12,10 @@
 <body>
 <main class="shell">
     <header class="topbar">
-        <div class="brand">Pulse <span>/</span> Monitor</div>
+        <div class="brand">
+            <i data-lucide="heart-pulse" class="brand-icon" aria-hidden="true"></i>
+            <span class="brand-text">Pulse <span>/</span> Monitor</span>
+        </div>
 
         <nav class="top-nav" aria-label="pages">
             <button id="menuHttp" class="top-nav-btn active">Endpoint</button>
@@ -36,10 +39,9 @@
 
         <div class="chip right refresh">
             <div class="refresh-meta">
-                <svg id="refreshIcon" class="refresh-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M20 4v5h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <span id="refreshSpinHost" class="refresh-icon-host" aria-hidden="true">
+                    <i data-lucide="refresh-cw" class="refresh-icon"></i>
+                </span>
                 <span class="muted">Refresh</span>
             </div>
             <div class="refresh-select-wrap">
@@ -102,6 +104,7 @@
             <article class="sql-block" style="margin-bottom:16px;">
                 <div class="sql-head">Spring Context</div>
                 <div id="contextBody" class="sql-body context-body">endpoint: -
+handler: -
 thread: -
 traceId: -
 status: -
@@ -115,8 +118,8 @@ exception: -</div>
                 <div class="trace-tools">
                     <label class="muted" for="traceSort">Sort</label>
                     <select id="traceSort" class="trace-sort">
-                        <option value="desc" selected>Longest first</option>
-                        <option value="asc">Shortest first</option>
+                        <option value="desc" selected>Descending</option>
+                        <option value="asc">Ascending</option>
                     </select>
                     <span class="muted" id="sqlMaxSlow">max 0 ms</span>
                 </div>
@@ -128,7 +131,7 @@ exception: -</div>
     <section id="httpView" class="view grid hidden">
         <aside class="col">
             <div class="panel-title">
-                <strong>Endpoints</strong>
+                <strong>Completions</strong>
                 <span class="muted" id="httpTotalEvents">0 calls</span>
             </div>
             <div id="endpointList" class="list"></div>
@@ -136,17 +139,17 @@ exception: -</div>
 
         <section class="center col">
             <div class="panel-title">
-                <strong id="httpSelectedEndpoint">HTTP(s) calls</strong>
-                <span class="muted" id="httpSelectedStats">-</span>
+                <strong id="httpSelectedEndpoint">HTTP Transaction</strong>
+                <span id="httpSelectedStats" class="muted">-</span>
             </div>
             <div class="metrics">
                 <div class="metric">
-                    <div class="value" id="httpP95">0 ms</div>
-                    <div class="label">P95 latency</div>
+                    <div class="value" id="httpDuration">0 ms</div>
+                    <div class="label">Time to complete</div>
                 </div>
                 <div class="metric">
-                    <div class="value" id="httpAvg">0 ms</div>
-                    <div class="label">Average latency</div>
+                    <div class="value" id="httpFreq">0</div>
+                    <div class="label">Occurrences</div>
                 </div>
                 <div class="metric">
                     <div class="value" id="httpErrors">0</div>
@@ -155,17 +158,24 @@ exception: -</div>
             </div>
 
             <article class="sql-block" style="margin-bottom:16px;">
-                <div class="sql-head">Recent HTTP calls (click one to inspect full Java stack profile)</div>
-                <div id="httpCallList" class="list compact-list"></div>
+                <div class="sql-head">HTTP Transaction</div>
+                <div id="httpRequestBody" class="sql-body">No transaction selected.</div>
             </article>
-        </section>
 
-        <aside class="col">
-            <div class="panel-title">
-                <strong>Slow Calls Details</strong>
-                <span class="muted" id="httpSlowHint">Click a slow call</span>
-            </div>
-            <div id="slowCallList" class="traces"></div>
+            <article class="sql-block" style="margin-bottom:16px;">
+                <div class="sql-head">Spring Context</div>
+                <div id="httpContextBody" class="sql-body context-body">endpoint: -
+handler: -
+thread: -
+traceId: -
+status: -
+params: 0
+headers: 0
+auth: -
+body: -
+exception: -</div>
+            </article>
+
             <article class="sql-block no-top-margin">
                 <div class="sql-head">Java stack hotspots</div>
                 <div id="httpHotspots" class="traces compact-traces"></div>
@@ -174,6 +184,21 @@ exception: -</div>
                 <div class="sql-head">Sampled call stacks</div>
                 <div id="httpStacks" class="traces compact-traces"></div>
             </article>
+        </section>
+
+        <aside class="col">
+            <div class="panel-title">
+                <strong>Trace Timeline</strong>
+                <div class="trace-tools">
+                    <label class="muted" for="httpTraceSort">Sort</label>
+                    <select id="httpTraceSort" class="trace-sort">
+                        <option value="desc" selected>Descending</option>
+                        <option value="asc">Ascending</option>
+                    </select>
+                    <span class="muted" id="httpSlowHint">max 0 ms</span>
+                </div>
+            </div>
+            <div id="slowCallList" class="traces"></div>
         </aside>
     </section>
 
@@ -181,7 +206,12 @@ exception: -</div>
         <div class="jvm-grid">
             <article class="jvm-card">
                 <div class="jvm-card-head">
-                    <strong>Heap usage</strong>
+                    <div class="jvm-term">
+                        <strong>Heap usage</strong>
+                        <button type="button" class="info-trigger" data-info-key="heap-usage" aria-label="Explain heap usage">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span class="muted" id="jvmHeapValue">0%</span>
                 </div>
                 <div class="jvm-card-sub" id="jvmHeapMeta">0 MB / 0 MB</div>
@@ -190,7 +220,12 @@ exception: -</div>
 
             <article class="jvm-card">
                 <div class="jvm-card-head">
-                    <strong>CPU usage</strong>
+                    <div class="jvm-term">
+                        <strong>CPU usage</strong>
+                        <button type="button" class="info-trigger" data-info-key="cpu-usage" aria-label="Explain cpu usage">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span class="muted" id="jvmCpuValue">0%</span>
                 </div>
                 <div class="jvm-card-sub" id="jvmCpuMeta">process CPU time 0 ms</div>
@@ -199,7 +234,12 @@ exception: -</div>
 
             <article class="jvm-card">
                 <div class="jvm-card-head">
-                    <strong>Thread count</strong>
+                    <div class="jvm-term">
+                        <strong>Thread count</strong>
+                        <button type="button" class="info-trigger" data-info-key="thread-count" aria-label="Explain thread count">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span class="muted" id="jvmThreadValue">0</span>
                 </div>
                 <div class="jvm-card-sub" id="jvmThreadMeta">peak 0</div>
@@ -208,43 +248,67 @@ exception: -</div>
 
             <article class="jvm-card">
                 <div class="jvm-card-head">
-                    <strong>GC count + pause time</strong>
-                    <span class="muted" id="jvmGcValue">0 / 0 ms</span>
-                </div>
-                <div class="jvm-card-sub" id="jvmGcMeta">delta +0 / +0 ms</div>
-                <div class="jvm-chart dual-chart">
-                    <div class="dual-line">
-                        <span class="muted">Count</span>
-                        <div id="jvmGcCountChart"></div>
+                    <div class="jvm-term">
+                        <strong>GC count</strong>
+                        <button type="button" class="info-trigger" data-info-key="gc-count" aria-label="Explain gc count">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
                     </div>
-                    <div class="dual-line">
-                        <span class="muted">Pause</span>
-                        <div id="jvmGcPauseChart"></div>
-                    </div>
+                    <span class="muted" id="jvmGcCountValue">0</span>
                 </div>
+                <div class="jvm-card-sub" id="jvmGcCountMeta">delta +0</div>
+                <div class="jvm-chart" id="jvmGcCountChart"></div>
             </article>
 
             <article class="jvm-card">
                 <div class="jvm-card-head">
-                    <strong>Request latency</strong>
+                    <div class="jvm-term">
+                        <strong>GC pause time</strong>
+                        <button type="button" class="info-trigger" data-info-key="gc-pause" aria-label="Explain gc pause time">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <span class="muted" id="jvmGcPauseValue">0 ms</span>
+                </div>
+                <div class="jvm-card-sub" id="jvmGcPauseMeta">delta +0 ms</div>
+                <div class="jvm-chart" id="jvmGcPauseChart"></div>
+            </article>
+
+            <article class="jvm-card">
+                <div class="jvm-card-head">
+                    <div class="jvm-term">
+                        <strong>Request latency</strong>
+                        <button type="button" class="info-trigger" data-info-key="request-latency" aria-label="Explain request latency">
+                            <i data-lucide="info" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span class="muted" id="jvmLatencyValue">0 ms</span>
                 </div>
                 <div class="jvm-card-sub" id="jvmLatencyMeta">p95 0 ms</div>
                 <div class="jvm-chart" id="jvmLatencyChart"></div>
             </article>
 
-            <article class="jvm-card">
-                <div class="jvm-card-head">
-                    <strong>Error rate</strong>
-                    <span class="muted" id="jvmErrorRateValue">0%</span>
-                </div>
-                <div class="jvm-card-sub" id="jvmErrorRateMeta">throughput 0 req/s</div>
-                <div class="jvm-chart" id="jvmErrorRateChart"></div>
-            </article>
         </div>
     </section>
 </main>
 
+<div id="infoModal" class="info-modal hidden" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+    <div class="info-modal-backdrop" data-info-close="true"></div>
+    <article class="info-modal-card" role="document">
+        <header class="info-modal-head">
+            <div class="info-modal-title-wrap">
+                <i data-lucide="circle-help" class="info-modal-title-icon" aria-hidden="true"></i>
+                <h3 id="infoModalTitle" class="info-modal-title">Metric explanation</h3>
+            </div>
+            <button id="infoModalClose" type="button" class="info-modal-close" data-info-close="true" aria-label="Close explanation">
+                <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div id="infoModalBody" class="info-modal-body"></div>
+    </article>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
 <script type="module" src="/assets/js/app.js"></script>
 </body>
 </html>

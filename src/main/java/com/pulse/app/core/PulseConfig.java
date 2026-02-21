@@ -25,15 +25,23 @@ public record PulseConfig(
         long slowThreshold = parseLong(map.get("slowMs"), 300L);
         long slowHttpThreshold = parseLong(map.get("slowHttpMs"), 500L);
         String bindAddress = map.getOrDefault("bind", "127.0.0.1");
-        String detectedApp = detectAppName();
-        String appName = map.getOrDefault("appName", detectedApp);
+        String detectedApp = detectRunningAppName();
+        String explicitAppName = map.get("appName");
+        String appName = (detectedApp == null || detectedApp.isBlank())
+                ? firstNonBlank(explicitAppName, "Monitored Application")
+                : detectedApp;
         return new PulseConfig(port, retentionMs, sampleRate, slowThreshold, slowHttpThreshold, bindAddress, appName);
     }
 
-    private static String detectAppName() {
+    public static String detectRunningAppName() {
         String springName = System.getProperty("spring.application.name");
         if (springName != null && !springName.isBlank()) {
             return springName;
+        }
+
+        String fromCommand = detectFromJavaCommand();
+        if (fromCommand != null && !fromCommand.isBlank()) {
+            return fromCommand;
         }
 
         String fromRuntime = detectFromRuntime();
@@ -47,6 +55,33 @@ public record PulseConfig(
         }
 
         return "Monitored Application";
+    }
+
+    private static String detectFromJavaCommand() {
+        String command = System.getProperty("sun.java.command");
+        if (command == null || command.isBlank()) {
+            return null;
+        }
+        String[] tokens = command.trim().split("\\s+");
+        if (tokens.length == 0) {
+            return null;
+        }
+        String firstToken = tokens[0];
+        if (firstToken.endsWith(".jar")) {
+            return stripJarExtension(fileName(firstToken));
+        }
+        if ("org.springframework.boot.loader.launch.JarLauncher".equals(firstToken)
+                || "org.springframework.boot.loader.JarLauncher".equals(firstToken)
+                || "org.springframework.boot.loader.PropertiesLauncher".equals(firstToken)) {
+            if (tokens.length > 1 && tokens[1].endsWith(".jar")) {
+                return stripJarExtension(fileName(tokens[1]));
+            }
+            return null;
+        }
+        if (firstToken.contains(".")) {
+            return firstToken;
+        }
+        return null;
     }
 
     private static String detectFromRuntime() {
@@ -126,6 +161,25 @@ public record PulseConfig(
             return parts[0] + "." + parts[1];
         }
         return pkg;
+    }
+
+    private static String fileName(String pathLike) {
+        String normalized = pathLike.replace("\\\\", "/");
+        int slash = normalized.lastIndexOf('/');
+        if (slash >= 0 && slash + 1 < normalized.length()) {
+            return normalized.substring(slash + 1);
+        }
+        return normalized;
+    }
+
+    private static String stripJarExtension(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return null;
+        }
+        if (fileName.toLowerCase().endsWith(".jar")) {
+            return fileName.substring(0, fileName.length() - 4);
+        }
+        return fileName;
     }
 
     private static String detectFromPomXml() {
@@ -251,4 +305,12 @@ public record PulseConfig(
         }
     }
 
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
 }

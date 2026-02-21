@@ -1,6 +1,7 @@
 package com.pulse.app.api;
 
 import com.pulse.app.core.PulseRuntime;
+import com.pulse.app.core.SqlEndpointCorrelationService;
 import com.pulse.app.model.SqlSnapshot;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +16,17 @@ public class SqlMetricsController {
 
     @GetMapping("/snapshot")
     public ResponseEntity<SqlSnapshot> snapshot() {
-        return ResponseEntity.ok(PulseRuntime.getCollector().snapshot());
+        SqlSnapshot snapshot = PulseRuntime.getCollector().snapshot();
+        SqlSnapshot correlated = SqlEndpointCorrelationService.correlate(
+                snapshot,
+                PulseRuntime.getHttpCollector().allEvents()
+        );
+        return ResponseEntity.ok(correlated);
     }
 
     @GetMapping("/config")
     public ResponseEntity<Map<String, Object>> config() {
+        PulseRuntime.refreshMonitoredAppName();
         var config = PulseRuntime.getConfig();
         return ResponseEntity.ok(Map.of(
                 "port", config.port(),

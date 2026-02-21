@@ -10,6 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Map;
+
+import static org.hamcrest.Matchers.blankOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,12 +40,15 @@ class PulseApiIntegrationTest {
                 25,
                 (String) null,
                 "main",
-                new HttpRequestContext("GET /users/1", "/users/{id}", 200, "trace-api-1")
+                new HttpRequestContext(null, null, null, "trace-api-1")
         );
 
         PulseRuntime.getHttpCollector().record(
                 new HttpRequestEvent("http-1", System.currentTimeMillis(), 40, "GET /users/1", "/users/{id}", 200,
-                        "trace-api-1", "main", null, false, null),
+                        "trace-api-1", "main", null, false, null,
+                        "page=1", Map.of("page", "1"), Map.of("X-Request-Id", "req-1"),
+                        "type=Bearer | authorization=Bearer abc...",
+                        "{\"id\":1}"),
                 0,
                 null,
                 null
@@ -52,11 +59,15 @@ class PulseApiIntegrationTest {
     void shouldExposeSqlSnapshotAndConfig() throws Exception {
         mockMvc.perform(get("/api/sql/snapshot"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalEvents").value(1));
+                .andExpect(jsonPath("$.totalEvents").value(1))
+                .andExpect(jsonPath("$.recent[0].endpoint").value("GET /users/1"))
+                .andExpect(jsonPath("$.recent[0].handler").value("/users/{id}"))
+                .andExpect(jsonPath("$.recent[0].httpStatus").value(200))
+                .andExpect(jsonPath("$.recent[0].traceId").value("trace-api-1"));
 
         mockMvc.perform(get("/api/sql/config"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.appName").value("test-app"))
+                .andExpect(jsonPath("$.appName").value(not(blankOrNullString())))
                 .andExpect(jsonPath("$.slowHttpThresholdMs").value(100));
     }
 
@@ -64,7 +75,12 @@ class PulseApiIntegrationTest {
     void shouldExposeHttpAndJvmAndHealthSnapshots() throws Exception {
         mockMvc.perform(get("/api/http/snapshot"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalEvents").value(1));
+                .andExpect(jsonPath("$.totalEvents").value(1))
+                .andExpect(jsonPath("$.recent[0].queryString").value("page=1"))
+                .andExpect(jsonPath("$.recent[0].parameters.page").value("1"))
+                .andExpect(jsonPath("$.recent[0].headers.X-Request-Id").value("req-1"))
+                .andExpect(jsonPath("$.recent[0].auth").value("type=Bearer | authorization=Bearer abc..."))
+                .andExpect(jsonPath("$.recent[0].requestBody").value("{\"id\":1}"));
 
         mockMvc.perform(get("/api/jvm/snapshot"))
                 .andExpect(status().isOk())

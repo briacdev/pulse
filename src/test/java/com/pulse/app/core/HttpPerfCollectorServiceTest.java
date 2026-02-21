@@ -16,11 +16,14 @@ class HttpPerfCollectorServiceTest {
         HttpPerfCollectorService service = new HttpPerfCollectorService(config);
 
         long now = System.currentTimeMillis();
-        service.record(new HttpRequestEvent("1", now - 30, 30, "GET /users", "/users", 200, "t1", "main", null, false, null),
+        service.record(new HttpRequestEvent("1", now - 30, 30, "GET /users", "/users", 200, "t1", "main", null, false, null,
+                        null, null, null, null, null),
                 0, null, null);
-        service.record(new HttpRequestEvent("2", now - 20, 90, "GET /users", "/users", 500, "t2", "main", "RuntimeException", true, null),
+        service.record(new HttpRequestEvent("2", now - 20, 90, "GET /users", "/users", 500, "t2", "main", "RuntimeException", true, null,
+                        null, null, null, null, null),
                 0, null, null);
-        service.record(new HttpRequestEvent("3", now - 10, 10, "GET /health", "/health", 200, "t3", "main", null, false, null),
+        service.record(new HttpRequestEvent("3", now - 10, 10, "GET /health", "/health", 200, "t3", "main", null, false, null,
+                        null, null, null, null, null),
                 0, null, null);
 
         HttpSnapshot snapshot = service.snapshot();

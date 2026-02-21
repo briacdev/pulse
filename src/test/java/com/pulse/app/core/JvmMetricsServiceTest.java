@@ -16,9 +16,11 @@ class JvmMetricsServiceTest {
         JvmMetricsService service = new JvmMetricsService(config);
 
         long now = System.currentTimeMillis();
-        httpCollector.record(new HttpRequestEvent("h1", now - 500, 120, "GET /demo", "/demo", 200, "t1", "main", null, false, null),
+        httpCollector.record(new HttpRequestEvent("h1", now - 500, 120, "GET /demo", "/demo", 200, "t1", "main", null, false, null,
+                        null, null, null, null, null),
                 0, null, null);
-        httpCollector.record(new HttpRequestEvent("h2", now - 250, 220, "GET /demo", "/demo", 500, "t2", "main", "RuntimeException", true, null),
+        httpCollector.record(new HttpRequestEvent("h2", now - 250, 220, "GET /demo", "/demo", 500, "t2", "main", "RuntimeException", true, null,
+                        null, null, null, null, null),
                 0, null, null);
 
         JvmSnapshot snapshot = service.snapshot(httpCollector);

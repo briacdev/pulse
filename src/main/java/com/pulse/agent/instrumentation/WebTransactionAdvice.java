@@ -12,7 +12,8 @@ public final class WebTransactionAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Origin("#t.#m") String origin,
                                @Advice.Argument(value = 0, optional = true) Object request) {
-        HttpTransactionSupport.onEnter(origin, request);
+        Object effectiveRequest = HttpTransactionSupport.prepareRequest(request);
+        HttpTransactionSupport.onEnter(origin, effectiveRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

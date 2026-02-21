@@ -21,18 +21,17 @@ export function createJvmView(ui, state) {
         ui.jvmThreadMeta.textContent = `peak ${snapshot.peakThreadCount || 0}`;
         ui.jvmThreadChart.innerHTML = renderSparkline(series(point => point.threadCount), "#9fd2ff", "", windowStart, windowEnd);
 
-        ui.jvmGcValue.textContent = `${snapshot.gcCountTotal || 0} / ${snapshot.gcPauseMsTotal || 0} ms`;
-        ui.jvmGcMeta.textContent = `delta +${snapshot.gcCountDelta || 0} / +${snapshot.gcPauseDeltaMs || 0} ms`;
+        ui.jvmGcCountValue.textContent = String(snapshot.gcCountTotal || 0);
+        ui.jvmGcCountMeta.textContent = `delta +${snapshot.gcCountDelta || 0}`;
         ui.jvmGcCountChart.innerHTML = renderSparkline(series(point => point.gcCountTotal), "#70ffc8", "", windowStart, windowEnd);
+
+        ui.jvmGcPauseValue.textContent = `${snapshot.gcPauseMsTotal || 0} ms`;
+        ui.jvmGcPauseMeta.textContent = `delta +${snapshot.gcPauseDeltaMs || 0} ms`;
         ui.jvmGcPauseChart.innerHTML = renderSparkline(series(point => point.gcPauseMsTotal), "#66b8ff", "ms", windowStart, windowEnd);
 
         ui.jvmLatencyValue.textContent = `${Math.round(snapshot.requestAvgLatencyMs || 0)} ms`;
         ui.jvmLatencyMeta.textContent = `p95 ${Math.round(snapshot.requestP95LatencyMs || 0)} ms`;
         ui.jvmLatencyChart.innerHTML = renderSparkline(series(point => point.requestAvgLatencyMs), "#7be0ff", "ms", windowStart, windowEnd);
-
-        ui.jvmErrorRateValue.textContent = `${(snapshot.errorRatePct || 0).toFixed(2)}%`;
-        ui.jvmErrorRateMeta.textContent = `throughput ${(snapshot.requestThroughputPerSec || 0).toFixed(2)} req/s`;
-        ui.jvmErrorRateChart.innerHTML = renderSparkline(series(point => point.errorRatePct), "#ff8aa0", "%", windowStart, windowEnd);
     }
 
     return { render };
