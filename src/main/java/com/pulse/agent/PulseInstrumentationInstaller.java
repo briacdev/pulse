@@ -12,7 +12,9 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 
 import java.lang.instrument.Instrumentation;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static net.bytebuddy.matcher.ElementMatchers.*;
@@ -28,7 +30,6 @@ public final class PulseInstrumentationInstaller {
     private static final AtomicLong SQL_TRANSFORMED = new AtomicLong();
     private static final Object HTTP_TYPES_LOCK = new Object();
     private static final ArrayDeque<String> HTTP_TYPES = new ArrayDeque<>();
-    private static volatile String lastError = "";
 
     public static void install(Instrumentation instrumentation) {
         AgentBuilder builder = new AgentBuilder.Default()
@@ -92,12 +93,10 @@ public final class PulseInstrumentationInstaller {
             @Override
             public void onError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
                 ERRORS.incrementAndGet();
-                lastError = typeName + ": " + throwable.getClass().getSimpleName() + " - " + throwable.getMessage();
             }
 
             @Override
-            public void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-            }
+            public void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
         };
 
         builder.with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
@@ -107,31 +106,12 @@ public final class PulseInstrumentationInstaller {
                 .installOn(instrumentation);
     }
 
-    public static Map<String, Object> debugCounters() {
-        Map<String, Object> output = new LinkedHashMap<>();
-        output.put("agentDiscovered", DISCOVERED.get());
-        output.put("agentTransformed", TRANSFORMED.get());
-        output.put("agentIgnored", IGNORED.get());
-        output.put("agentErrors", ERRORS.get());
-        output.put("agentHttpTransformed", HTTP_TRANSFORMED.get());
-        output.put("agentSqlTransformed", SQL_TRANSFORMED.get());
-        output.put("agentHttpTypes", recentHttpTypes());
-        output.put("agentLastError", lastError);
-        return output;
-    }
-
     private static void rememberHttpType(String typeName) {
         synchronized (HTTP_TYPES_LOCK) {
             HTTP_TYPES.addLast(typeName);
             while (HTTP_TYPES.size() > 24) {
                 HTTP_TYPES.removeFirst();
             }
-        }
-    }
-
-    private static List<String> recentHttpTypes() {
-        synchronized (HTTP_TYPES_LOCK) {
-            return new ArrayList<>(HTTP_TYPES);
         }
     }
 

@@ -1,4 +1,4 @@
-import { formatClock } from "../shared/formatters.js";
+import {formatClock} from "../shared/formatters.js";
 
 function hasError(value) {
     if (!value) {
@@ -18,7 +18,7 @@ export function renderLatencyTimeline(ui, state, snapshot, recentEvents) {
     const start = now - state.retentionMs;
     const binsCount = 96;
     const binSize = state.retentionMs / binsCount;
-    const bins = Array.from({ length: binsCount }, () => ({ latency: 0, hasError: false, count: 0 }));
+    const bins = Array.from({length: binsCount}, () => ({latency: 0, hasError: false, count: 0}));
 
     for (const event of recentEvents || []) {
         if (!event || event.timestamp < start || event.timestamp > now) continue;

@@ -1,5 +1,5 @@
-import { escapeHtml, shortText, timeAgo } from "../shared/formatters.js";
-import { renderLatencyTimeline } from "../components/latencyTimeline.js";
+import {escapeHtml, shortText, timeAgo} from "../shared/formatters.js";
+import {renderLatencyTimeline} from "../components/latencyTimeline.js";
 
 export function createSqlView(ui, state, getSearchQuery) {
     function matchesSearch(eventLike) {
@@ -111,5 +111,5 @@ export function createSqlView(ui, state, getSearchQuery) {
         renderLatencyTimeline(ui, state, snapshot, snapshot.recent || []);
     }
 
-    return { render };
+    return {render};
 }

@@ -1,4 +1,4 @@
-import { renderSparkline } from "../components/sparkline.js";
+import {renderSparkline} from "../components/sparkline.js";
 
 export function createJvmView(ui, state) {
     function render(snapshot) {
@@ -7,7 +7,7 @@ export function createJvmView(ui, state) {
         const windowEnd = snapshot.generatedAt || Date.now();
         const retentionMs = snapshot.retentionMs || state.retentionMs;
         const windowStart = windowEnd - retentionMs;
-        const series = mapFn => timeline.map(point => ({ t: point.timestamp, v: mapFn(point) || 0 }));
+        const series = mapFn => timeline.map(point => ({t: point.timestamp, v: mapFn(point) || 0}));
 
         ui.jvmHeapValue.textContent = `${(snapshot.heapUsagePct || 0).toFixed(1)}%`;
         ui.jvmHeapMeta.textContent = `${snapshot.heapUsedMb || 0} MB / ${snapshot.heapMaxMb || 0} MB`;
@@ -34,5 +34,5 @@ export function createJvmView(ui, state) {
         ui.jvmLatencyChart.innerHTML = renderSparkline(series(point => point.requestAvgLatencyMs), "#7be0ff", "ms", windowStart, windowEnd);
     }
 
-    return { render };
+    return {render};
 }

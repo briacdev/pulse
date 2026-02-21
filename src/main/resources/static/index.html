@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Pulse Monitor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/pulse.css">
+    <link href="/assets/pulse.css" rel="stylesheet">
 </head>
 <body>
 <main class="shell">
     <header class="topbar">
         <div class="brand">
-            <i data-lucide="heart-pulse" class="brand-icon" aria-hidden="true"></i>
+            <i aria-hidden="true" class="brand-icon" data-lucide="heart-pulse"></i>
             <span class="brand-text">Pulse <span>/</span> Monitor</span>
         </div>
 
-        <nav class="top-nav" aria-label="pages">
-            <button id="menuHttp" class="top-nav-btn active">Endpoint</button>
-            <button id="menuSql" class="top-nav-btn">Database</button>
-            <button id="menuJvm" class="top-nav-btn">JVM</button>
+        <nav aria-label="pages" class="top-nav">
+            <button class="top-nav-btn active" id="menuHttp">Endpoint</button>
+            <button class="top-nav-btn" id="menuSql">Database</button>
+            <button class="top-nav-btn" id="menuJvm">JVM</button>
         </nav>
 
         <div class="retention" id="retentionLabel">Data retention: 15 minutes</div>
@@ -39,15 +39,15 @@
 
         <div class="chip right refresh">
             <div class="refresh-meta">
-                <span id="refreshSpinHost" class="refresh-icon-host" aria-hidden="true">
-                    <i data-lucide="refresh-cw" class="refresh-icon"></i>
+                <span aria-hidden="true" class="refresh-icon-host" id="refreshSpinHost">
+                    <i class="refresh-icon" data-lucide="refresh-cw"></i>
                 </span>
                 <span class="muted">Refresh</span>
             </div>
             <div class="refresh-select-wrap">
-                <select id="interval" class="refresh-select">
+                <select class="refresh-select" id="interval">
                     <option value="1000">1s</option>
-                    <option value="3000" selected>3s</option>
+                    <option selected value="3000">3s</option>
                     <option value="5000">5s</option>
                     <option value="10000">10s</option>
                 </select>
@@ -64,22 +64,22 @@
             <span id="tick5">-</span>
             <span id="tick6">-</span>
         </div>
-        <div id="timelineBars" class="timeline-bars"></div>
+        <div class="timeline-bars" id="timelineBars"></div>
     </section>
 
-    <section id="sqlView" class="view grid">
+    <section class="view grid" id="sqlView">
         <aside class="col">
             <div class="panel-title">
                 <strong>Completions</strong>
                 <span class="muted" id="sqlTotalEvents">0 events</span>
             </div>
-            <div id="recentList" class="list"></div>
+            <div class="list" id="recentList"></div>
         </aside>
 
         <section class="center col">
             <div class="panel-title">
                 <strong id="selectedTitle">SQL Execution</strong>
-                <span id="selectedAgo" class="muted">-</span>
+                <span class="muted" id="selectedAgo">-</span>
             </div>
             <div class="metrics">
                 <div class="metric">
@@ -98,17 +98,18 @@
 
             <article class="sql-block">
                 <div class="sql-head">Normalized SQL</div>
-                <div id="sqlBody" class="sql-body">No query selected.</div>
+                <div class="sql-body" id="sqlBody">No query selected.</div>
             </article>
 
             <article class="sql-block" style="margin-bottom:16px;">
                 <div class="sql-head">Spring Context</div>
-                <div id="contextBody" class="sql-body context-body">endpoint: -
-handler: -
-thread: -
-traceId: -
-status: -
-exception: -</div>
+                <div class="sql-body context-body" id="contextBody">endpoint: -
+                    handler: -
+                    thread: -
+                    traceId: -
+                    status: -
+                    exception: -
+                </div>
             </article>
         </section>
 
@@ -117,30 +118,30 @@ exception: -</div>
                 <strong>Trace Timeline</strong>
                 <div class="trace-tools">
                     <label class="muted" for="traceSort">Sort</label>
-                    <select id="traceSort" class="trace-sort">
-                        <option value="desc" selected>Descending</option>
+                    <select class="trace-sort" id="traceSort">
+                        <option selected value="desc">Descending</option>
                         <option value="asc">Ascending</option>
                     </select>
                     <span class="muted" id="sqlMaxSlow">max 0 ms</span>
                 </div>
             </div>
-            <div id="traceList" class="traces"></div>
+            <div class="traces" id="traceList"></div>
         </aside>
     </section>
 
-    <section id="httpView" class="view grid hidden">
+    <section class="view grid hidden" id="httpView">
         <aside class="col">
             <div class="panel-title">
                 <strong>Completions</strong>
                 <span class="muted" id="httpTotalEvents">0 calls</span>
             </div>
-            <div id="endpointList" class="list"></div>
+            <div class="list" id="endpointList"></div>
         </aside>
 
         <section class="center col">
             <div class="panel-title">
                 <strong id="httpSelectedEndpoint">HTTP Transaction</strong>
-                <span id="httpSelectedStats" class="muted">-</span>
+                <span class="muted" id="httpSelectedStats">-</span>
             </div>
             <div class="metrics">
                 <div class="metric">
@@ -159,30 +160,31 @@ exception: -</div>
 
             <article class="sql-block" style="margin-bottom:16px;">
                 <div class="sql-head">HTTP Transaction</div>
-                <div id="httpRequestBody" class="sql-body">No transaction selected.</div>
+                <div class="sql-body" id="httpRequestBody">No transaction selected.</div>
             </article>
 
             <article class="sql-block" style="margin-bottom:16px;">
                 <div class="sql-head">Spring Context</div>
-                <div id="httpContextBody" class="sql-body context-body">endpoint: -
-handler: -
-thread: -
-traceId: -
-status: -
-params: 0
-headers: 0
-auth: -
-body: -
-exception: -</div>
+                <div class="sql-body context-body" id="httpContextBody">endpoint: -
+                    handler: -
+                    thread: -
+                    traceId: -
+                    status: -
+                    params: 0
+                    headers: 0
+                    auth: -
+                    body: -
+                    exception: -
+                </div>
             </article>
 
             <article class="sql-block no-top-margin">
                 <div class="sql-head">Java stack hotspots</div>
-                <div id="httpHotspots" class="traces compact-traces"></div>
+                <div class="traces compact-traces" id="httpHotspots"></div>
             </article>
             <article class="sql-block">
                 <div class="sql-head">Sampled call stacks</div>
-                <div id="httpStacks" class="traces compact-traces"></div>
+                <div class="traces compact-traces" id="httpStacks"></div>
             </article>
         </section>
 
@@ -191,25 +193,26 @@ exception: -</div>
                 <strong>Trace Timeline</strong>
                 <div class="trace-tools">
                     <label class="muted" for="httpTraceSort">Sort</label>
-                    <select id="httpTraceSort" class="trace-sort">
-                        <option value="desc" selected>Descending</option>
+                    <select class="trace-sort" id="httpTraceSort">
+                        <option selected value="desc">Descending</option>
                         <option value="asc">Ascending</option>
                     </select>
                     <span class="muted" id="httpSlowHint">max 0 ms</span>
                 </div>
             </div>
-            <div id="slowCallList" class="traces"></div>
+            <div class="traces" id="slowCallList"></div>
         </aside>
     </section>
 
-    <section id="jvmView" class="view hidden jvm-view">
+    <section class="view hidden jvm-view" id="jvmView">
         <div class="jvm-grid">
             <article class="jvm-card">
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>Heap usage</strong>
-                        <button type="button" class="info-trigger" data-info-key="heap-usage" aria-label="Explain heap usage">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain heap usage" class="info-trigger" data-info-key="heap-usage"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmHeapValue">0%</span>
@@ -222,8 +225,9 @@ exception: -</div>
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>CPU usage</strong>
-                        <button type="button" class="info-trigger" data-info-key="cpu-usage" aria-label="Explain cpu usage">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain cpu usage" class="info-trigger" data-info-key="cpu-usage"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmCpuValue">0%</span>
@@ -236,8 +240,9 @@ exception: -</div>
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>Thread count</strong>
-                        <button type="button" class="info-trigger" data-info-key="thread-count" aria-label="Explain thread count">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain thread count" class="info-trigger" data-info-key="thread-count"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmThreadValue">0</span>
@@ -250,8 +255,9 @@ exception: -</div>
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>GC count</strong>
-                        <button type="button" class="info-trigger" data-info-key="gc-count" aria-label="Explain gc count">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain gc count" class="info-trigger" data-info-key="gc-count"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmGcCountValue">0</span>
@@ -264,8 +270,9 @@ exception: -</div>
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>GC pause time</strong>
-                        <button type="button" class="info-trigger" data-info-key="gc-pause" aria-label="Explain gc pause time">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain gc pause time" class="info-trigger" data-info-key="gc-pause"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmGcPauseValue">0 ms</span>
@@ -278,8 +285,9 @@ exception: -</div>
                 <div class="jvm-card-head">
                     <div class="jvm-term">
                         <strong>Request latency</strong>
-                        <button type="button" class="info-trigger" data-info-key="request-latency" aria-label="Explain request latency">
-                            <i data-lucide="info" aria-hidden="true"></i>
+                        <button aria-label="Explain request latency" class="info-trigger" data-info-key="request-latency"
+                                type="button">
+                            <i aria-hidden="true" data-lucide="info"></i>
                         </button>
                     </div>
                     <span class="muted" id="jvmLatencyValue">0 ms</span>
@@ -292,23 +300,24 @@ exception: -</div>
     </section>
 </main>
 
-<div id="infoModal" class="info-modal hidden" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+<div aria-labelledby="infoModalTitle" aria-modal="true" class="info-modal hidden" id="infoModal" role="dialog">
     <div class="info-modal-backdrop" data-info-close="true"></div>
     <article class="info-modal-card" role="document">
         <header class="info-modal-head">
             <div class="info-modal-title-wrap">
-                <i data-lucide="circle-help" class="info-modal-title-icon" aria-hidden="true"></i>
-                <h3 id="infoModalTitle" class="info-modal-title">Metric explanation</h3>
+                <i aria-hidden="true" class="info-modal-title-icon" data-lucide="circle-help"></i>
+                <h3 class="info-modal-title" id="infoModalTitle">Metric explanation</h3>
             </div>
-            <button id="infoModalClose" type="button" class="info-modal-close" data-info-close="true" aria-label="Close explanation">
-                <i data-lucide="x" aria-hidden="true"></i>
+            <button aria-label="Close explanation" class="info-modal-close" data-info-close="true" id="infoModalClose"
+                    type="button">
+                <i aria-hidden="true" data-lucide="x"></i>
             </button>
         </header>
-        <div id="infoModalBody" class="info-modal-body"></div>
+        <div class="info-modal-body" id="infoModalBody"></div>
     </article>
 </div>
 
 <script src="https://unpkg.com/lucide@latest"></script>
-<script type="module" src="/assets/js/app.js"></script>
+<script src="/assets/js/app.js" type="module"></script>
 </body>
 </html>

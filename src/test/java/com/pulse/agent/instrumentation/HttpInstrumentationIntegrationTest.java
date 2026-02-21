@@ -7,16 +7,9 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class HttpInstrumentationIntegrationTest {
 
@@ -97,13 +90,13 @@ class HttpInstrumentationIntegrationTest {
         private final String path;
         private final String handler;
         private final int localPort;
+        private final Map<String, String[]> params = new LinkedHashMap<>();
+        private final Map<String, List<String>> headers = new LinkedHashMap<>();
         private String queryString;
         private String contentType;
         private byte[] contentBytes;
         private String authType;
         private Principal principal;
-        private final Map<String, String[]> params = new LinkedHashMap<>();
-        private final Map<String, List<String>> headers = new LinkedHashMap<>();
 
         FakeRequest(String method, String path, String handler) {
             this(method, path, handler, 8080);

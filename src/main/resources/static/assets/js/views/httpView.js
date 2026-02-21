@@ -1,5 +1,5 @@
-import { escapeHtml, shortText, timeAgo } from "../shared/formatters.js";
-import { renderLatencyTimeline } from "../components/latencyTimeline.js";
+import {escapeHtml, shortText, timeAgo} from "../shared/formatters.js";
+import {renderLatencyTimeline} from "../components/latencyTimeline.js";
 
 export function createHttpView(ui, state, getSearchQuery, getJson) {
     function mapToText(mapLike) {
@@ -250,5 +250,5 @@ export function createHttpView(ui, state, getSearchQuery, getJson) {
         }
     }
 
-    return { render, clearTraceDetail };
+    return {render, clearTraceDetail};
 }

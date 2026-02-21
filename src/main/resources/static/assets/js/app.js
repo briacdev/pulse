@@ -1,7 +1,7 @@
-import { createSqlView } from "./views/sqlView.js";
-import { createHttpView } from "./views/httpView.js";
-import { createJvmView } from "./views/jvmView.js";
-import { initInfoModal } from "./components/infoModal.js";
+import {createSqlView} from "./views/sqlView.js";
+import {createHttpView} from "./views/httpView.js";
+import {createJvmView} from "./views/jvmView.js";
+import {initInfoModal} from "./components/infoModal.js";
 
 (() => {
     const state = {

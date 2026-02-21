@@ -1,4 +1,4 @@
-import { formatClock } from "../shared/formatters.js";
+import {formatClock} from "../shared/formatters.js";
 
 export function renderSparkline(samples, color, unitSuffix = "", windowStart, windowEnd) {
     const width = 420;
@@ -34,7 +34,7 @@ export function renderSparkline(samples, color, unitSuffix = "", windowStart, wi
         const relative = (sample.t - windowStart) / timeSpan;
         const x = sample.t ? (padLeft + Math.max(0, Math.min(1, relative)) * (width - padLeft - padRight)) : fallbackX;
         const y = (height - padBottom) - ((sample.v - min) / span) * ((height - padBottom) - padTop);
-        return { x, y };
+        return {x, y};
     });
 
     const linePoints = points.map(point => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");

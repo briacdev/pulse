@@ -44,8 +44,7 @@ public final class PulseAgent {
         try {
             probe.assertAvailable(config.bindAddress(), config.port());
         } catch (IOException error) {
-            throw new IllegalStateException("Pulse cannot start on " + config.bindAddress() + ":" + config.port()
-                    + " because the port is already in use.", error);
+            throw new IllegalStateException("Pulse cannot start on " + config.bindAddress() + ":" + config.port() + " because the port is already in use.", error);
         }
     }
 

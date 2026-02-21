@@ -21,8 +21,4 @@ public final class WebTransactionAdvice {
                               @Advice.Thrown Throwable thrown) {
         HttpTransactionSupport.onExit(request, response, thrown);
     }
-
-    public static Map<String, Object> debugCounters() {
-        return HttpTransactionSupport.debugCounters();
-    }
 }
