@@ -1,9 +1,10 @@
 package com.pulse.agent;
 
-import com.pulse.agent.instrumentation.PrepareStatementAdvice;
 import com.pulse.agent.instrumentation.DispatcherServletAdvice;
+import com.pulse.agent.instrumentation.PrepareStatementAdvice;
 import com.pulse.agent.instrumentation.StatementExecutionAdvice;
 import com.pulse.agent.instrumentation.WebTransactionAdvice;
+import lombok.RequiredArgsConstructor;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -11,21 +12,12 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.nameContains;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
+@RequiredArgsConstructor
 public final class PulseInstrumentationInstaller {
 
     private static final AtomicLong DISCOVERED = new AtomicLong();
@@ -37,9 +29,6 @@ public final class PulseInstrumentationInstaller {
     private static final Object HTTP_TYPES_LOCK = new Object();
     private static final ArrayDeque<String> HTTP_TYPES = new ArrayDeque<>();
     private static volatile String lastError = "";
-
-    private PulseInstrumentationInstaller() {
-    }
 
     public static void install(Instrumentation instrumentation) {
         AgentBuilder builder = new AgentBuilder.Default()
@@ -103,7 +92,7 @@ public final class PulseInstrumentationInstaller {
             @Override
             public void onError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
                 ERRORS.incrementAndGet();
-                lastError = typeName + ": " + throwable.getClass().getSimpleName() + " - " + String.valueOf(throwable.getMessage());
+                lastError = typeName + ": " + throwable.getClass().getSimpleName() + " - " + throwable.getMessage();
             }
 
             @Override

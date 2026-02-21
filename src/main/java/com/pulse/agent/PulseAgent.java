@@ -3,6 +3,7 @@ package com.pulse.agent;
 import com.pulse.app.PulseApplication;
 import com.pulse.app.core.PulseConfig;
 import com.pulse.app.core.PulseRuntime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 
@@ -19,13 +20,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 
+@RequiredArgsConstructor
 public final class PulseAgent {
 
     private static final AtomicBoolean STARTED = new AtomicBoolean(false);
     private static volatile PortProbe portProbe = PulseAgent::defaultProbe;
-
-    private PulseAgent() {
-    }
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         if (!STARTED.compareAndSet(false, true)) {
@@ -59,11 +58,6 @@ public final class PulseAgent {
             socket.setReuseAddress(true);
             socket.bind(new InetSocketAddress(InetAddress.getByName(bindAddress), port));
         }
-    }
-
-    @FunctionalInterface
-    interface PortProbe {
-        void assertAvailable(String bindAddress, int port) throws IOException;
     }
 
     private static void startServer(PulseConfig config) {
@@ -112,5 +106,10 @@ public final class PulseAgent {
         } catch (Throwable error) {
             System.err.println("[pulse-agent] failed to append agent jar to system classloader: " + error.getMessage());
         }
+    }
+
+    @FunctionalInterface
+    interface PortProbe {
+        void assertAvailable(String bindAddress, int port) throws IOException;
     }
 }

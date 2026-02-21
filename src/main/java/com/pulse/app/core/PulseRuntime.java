@@ -1,5 +1,10 @@
 package com.pulse.app.core;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public final class PulseRuntime {
 
     private static volatile PulseConfig config = PulseConfig.fromAgentArgs(null);
@@ -8,9 +13,6 @@ public final class PulseRuntime {
     private static volatile JvmMetricsService jvmMetrics = new JvmMetricsService(config);
     private static volatile String monitoredAppName = config.appName();
     private static volatile HttpStackProfilerService httpStackProfiler = new HttpStackProfilerService();
-
-    private PulseRuntime() {
-    }
 
     public static void initialize(PulseConfig pulseConfig) {
         config = pulseConfig;
@@ -40,13 +42,6 @@ public final class PulseRuntime {
 
     public static String monitoredAppName() {
         return monitoredAppName;
-    }
-
-    public static void updateMonitoredAppName(String name) {
-        if (name == null || name.isBlank()) {
-            return;
-        }
-        monitoredAppName = name;
     }
 
     public static void refreshMonitoredAppName() {

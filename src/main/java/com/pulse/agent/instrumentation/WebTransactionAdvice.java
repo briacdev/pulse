@@ -1,13 +1,12 @@
 package com.pulse.agent.instrumentation;
 
+import lombok.RequiredArgsConstructor;
 import net.bytebuddy.asm.Advice;
 
 import java.util.Map;
 
+@RequiredArgsConstructor
 public final class WebTransactionAdvice {
-
-    private WebTransactionAdvice() {
-    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Origin("#t.#m") String origin,

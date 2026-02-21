@@ -6,21 +6,15 @@ import com.pulse.app.core.PulseRuntime;
 import com.pulse.app.model.HttpRequestContext;
 import com.pulse.app.model.http.HttpRequestEvent;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+@RequiredArgsConstructor
 public final class HttpTransactionSupport {
 
     private static final ThreadLocal<Integer> REQUEST_DEPTH = ThreadLocal.withInitial(() -> 0);
@@ -56,9 +50,6 @@ public final class HttpTransactionSupport {
 
     private static volatile String lastError = "";
     private static volatile String lastOrigin = "";
-
-    private HttpTransactionSupport() {
-    }
 
     public static Object prepareRequest(Object request) {
         if (request == null) {
@@ -136,7 +127,7 @@ public final class HttpTransactionSupport {
         try {
             stackHandle = PulseRuntime.getHttpStackProfiler().start(Thread.currentThread());
         } catch (Throwable error) {
-            lastError = "onEnter start profiler: " + error.getClass().getSimpleName() + " - " + String.valueOf(error.getMessage());
+            lastError = "onEnter start profiler: " + error.getClass().getSimpleName() + " - " + error.getMessage();
         }
 
         HttpContextHolder.set(new HttpRequestContext(endpoint, handler, null, traceId));
@@ -197,7 +188,7 @@ public final class HttpTransactionSupport {
                 PulseRuntime.getHttpStackProfiler().popBySpanId(state.traceId);
             }
         } catch (Throwable error) {
-            lastError = "onExit collect profiler: " + error.getClass().getSimpleName() + " - " + String.valueOf(error.getMessage());
+            lastError = "onExit collect profiler: " + error.getClass().getSimpleName() + " - " + error.getMessage();
         }
 
         HttpRequestEvent event = new HttpRequestEvent(
@@ -229,7 +220,7 @@ public final class HttpTransactionSupport {
             RECORDED.incrementAndGet();
         } catch (Throwable error) {
             RECORD_ERRORS.incrementAndGet();
-            lastError = "onExit record: " + error.getClass().getSimpleName() + " - " + String.valueOf(error.getMessage());
+            lastError = "onExit record: " + error.getClass().getSimpleName() + " - " + error.getMessage();
         } finally {
             HttpContextHolder.clear();
         }

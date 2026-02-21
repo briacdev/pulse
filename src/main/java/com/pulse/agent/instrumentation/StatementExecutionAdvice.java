@@ -5,8 +5,10 @@ import com.pulse.app.core.PulseRuntime;
 import com.pulse.app.core.SqlParser;
 import com.pulse.app.model.HttpRequestContext;
 import com.pulse.app.model.SqlType;
+import lombok.RequiredArgsConstructor;
 import net.bytebuddy.asm.Advice;
 
+@RequiredArgsConstructor
 public class StatementExecutionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

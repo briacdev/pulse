@@ -188,7 +188,7 @@ body.modal-open {
 }
 
 .refresh-select {
-    border: 0;
+    border: 0 !important;
     outline: none;
     background: transparent;
     color: var(--text);

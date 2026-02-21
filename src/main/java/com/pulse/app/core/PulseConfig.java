@@ -1,9 +1,9 @@
 package com.pulse.app.core;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +54,7 @@ public record PulseConfig(
             return fromPom;
         }
 
-        return "Monitored Application";
+        return "Name not found";
     }
 
     private static String detectFromJavaCommand() {
@@ -272,7 +272,7 @@ public record PulseConfig(
         String[] pairs = args.split(",");
         for (String pair : pairs) {
             String trimmed = pair.trim();
-            if (trimmed.isEmpty() || !trimmed.contains("=")) {
+            if (!trimmed.contains("=")) {
                 continue;
             }
             String[] tokens = trimmed.split("=", 2);

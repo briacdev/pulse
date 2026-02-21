@@ -4,11 +4,7 @@ import com.pulse.app.model.SqlEvent;
 import com.pulse.app.model.SqlSnapshot;
 import com.pulse.app.model.http.HttpRequestEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public final class SqlEndpointCorrelationService {
 
@@ -107,7 +103,7 @@ public final class SqlEndpointCorrelationService {
     }
 
     private static HttpRequestEvent findByThreadAndTime(SqlEvent sqlEvent,
-                                                         Map<String, List<HttpRequestEvent>> byThread) {
+                                                        Map<String, List<HttpRequestEvent>> byThread) {
         String thread = normalize(sqlEvent.threadName());
         if (thread.isEmpty()) {
             return null;

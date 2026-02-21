@@ -73,9 +73,9 @@ public class HttpStackProfilerService {
 
     private static final class ActiveProfile {
         private final Thread thread;
-        private int totalSamples;
         private final Map<String, Integer> hotspotSamples = new HashMap<>();
         private final Map<String, Integer> stackSamples = new HashMap<>();
+        private int totalSamples;
 
         private ActiveProfile(Thread thread) {
             this.thread = thread;
@@ -83,7 +83,7 @@ public class HttpStackProfilerService {
 
         private synchronized void sample() {
             StackTraceElement[] frames = thread.getStackTrace();
-            if (frames == null || frames.length == 0) {
+            if (frames.length == 0) {
                 return;
             }
             totalSamples++;

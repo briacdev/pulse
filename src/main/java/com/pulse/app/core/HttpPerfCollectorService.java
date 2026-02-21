@@ -1,19 +1,9 @@
 package com.pulse.app.core;
 
-import com.pulse.app.model.http.HttpEndpointAggregate;
-import com.pulse.app.model.http.HttpRequestEvent;
-import com.pulse.app.model.http.HttpSnapshot;
-import com.pulse.app.model.http.HttpTraceDetail;
-import com.pulse.app.model.http.StackFrameStat;
-import com.pulse.app.model.http.StackSample;
+import com.pulse.app.model.http.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -149,11 +139,11 @@ public class HttpPerfCollectorService {
     }
 
     private static final class EndpointMutable {
+        private final List<Long> durations = new ArrayList<>();
         private long count;
         private long errors;
         private long slow;
         private long sum;
         private long max;
-        private final List<Long> durations = new ArrayList<>();
     }
 }

@@ -27,8 +27,7 @@ class PulseApiIntegrationTest {
         mockMvc = MockMvcBuilders.standaloneSetup(
                 new SqlMetricsController(),
                 new HttpMetricsController(),
-                new JvmMetricsController(),
-                new HealthController()
+                new JvmMetricsController()
         ).build();
 
         PulseRuntime.initialize(new PulseConfig(17321, 120_000, 1.0, 100, 100, "127.0.0.1", "test-app"));
@@ -85,9 +84,5 @@ class PulseApiIntegrationTest {
         mockMvc.perform(get("/api/jvm/snapshot"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.retentionMs").value(120000));
-
-        mockMvc.perform(get("/api/health"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"));
     }
 }

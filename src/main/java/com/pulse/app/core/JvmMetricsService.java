@@ -4,11 +4,7 @@ import com.pulse.app.model.http.HttpRequestEvent;
 import com.pulse.app.model.jvm.JvmSnapshot;
 import com.pulse.app.model.jvm.JvmTimelinePoint;
 
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;

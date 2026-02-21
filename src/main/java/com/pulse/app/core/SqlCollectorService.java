@@ -1,21 +1,9 @@
 package com.pulse.app.core;
 
-import com.pulse.app.model.HttpRequestContext;
-import com.pulse.app.model.SqlAggregate;
-import com.pulse.app.model.SqlEvent;
-import com.pulse.app.model.SqlSnapshot;
-import com.pulse.app.model.SqlStatus;
-import com.pulse.app.model.SqlType;
-import com.pulse.app.model.TimelinePoint;
+import com.pulse.app.model.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
 

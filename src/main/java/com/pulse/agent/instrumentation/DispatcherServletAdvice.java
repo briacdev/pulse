@@ -1,14 +1,13 @@
 package com.pulse.agent.instrumentation;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import net.bytebuddy.asm.Advice;
 
 import java.util.Map;
 
+@RequiredArgsConstructor
 public final class DispatcherServletAdvice {
-
-    private DispatcherServletAdvice() {
-    }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnterAdvice(@Advice.Origin("#t.#m") String origin,
