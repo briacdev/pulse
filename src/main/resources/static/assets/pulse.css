@@ -251,6 +251,10 @@ body.modal-open {
     min-height: 650px;
 }
 
+.pb-25vh {
+    padding-bottom: 25vh !important;
+}
+
 .hidden {
     display: none !important;
 }
