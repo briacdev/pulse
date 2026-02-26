@@ -56,7 +56,7 @@ class SqlEndpointCorrelationServiceTest {
                 List.of(http)
         );
 
-        SqlEvent enriched = correlated.recent().getFirst();
+        SqlEvent enriched = correlated.recent().get(0);
         assertEquals("GET /users/1", enriched.endpoint());
         assertEquals("/users/{id}", enriched.handler());
         assertEquals(200, enriched.httpStatus());
@@ -105,7 +105,7 @@ class SqlEndpointCorrelationServiceTest {
                 List.of(http)
         );
 
-        SqlEvent enriched = correlated.recent().getFirst();
+        SqlEvent enriched = correlated.recent().get(0);
         assertEquals("PUT /users/1", enriched.endpoint());
         assertEquals("/users/{id}", enriched.handler());
         assertEquals(204, enriched.httpStatus());
@@ -154,7 +154,7 @@ class SqlEndpointCorrelationServiceTest {
                 List.of(http)
         );
 
-        SqlEvent enriched = correlated.recent().getFirst();
+        SqlEvent enriched = correlated.recent().get(0);
         assertNull(enriched.endpoint());
         assertNull(enriched.handler());
         assertNull(enriched.httpStatus());

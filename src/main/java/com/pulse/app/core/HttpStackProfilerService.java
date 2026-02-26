@@ -116,7 +116,7 @@ public class HttpStackProfilerService {
                     ))
                     .toList();
 
-            String hottest = hotspots.isEmpty() ? null : hotspots.getFirst().frame();
+            String hottest = hotspots.isEmpty() ? null : hotspots.get(0).frame();
             return new StackProfile(totalSamples, hotspots, stacks, hottest);
         }
 

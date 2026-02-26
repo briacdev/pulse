@@ -28,10 +28,10 @@ class HttpInstrumentationIntegrationTest {
 
         var snapshot = PulseRuntime.getHttpCollector().snapshot();
         assertEquals(1, snapshot.totalEvents());
-        assertEquals("GET /demo", snapshot.recent().getFirst().endpoint());
-        assertEquals(200, snapshot.recent().getFirst().httpStatus());
-        assertNotNull(snapshot.recent().getFirst().traceId());
-        assertFalse(snapshot.recent().getFirst().traceId().isBlank());
+        assertEquals("GET /demo", snapshot.recent().get(0).endpoint());
+        assertEquals(200, snapshot.recent().get(0).httpStatus());
+        assertNotNull(snapshot.recent().get(0).traceId());
+        assertFalse(snapshot.recent().get(0).traceId().isBlank());
     }
 
     @Test
@@ -63,7 +63,7 @@ class HttpInstrumentationIntegrationTest {
         DispatcherServletAdvice.onEnter("org.springframework.web.servlet.DispatcherServlet.doDispatch", request);
         DispatcherServletAdvice.onExit(request, response, null);
 
-        var event = PulseRuntime.getHttpCollector().snapshot().recent().getFirst();
+        var event = PulseRuntime.getHttpCollector().snapshot().recent().get(0);
         assertEquals("page=1", event.queryString());
         assertEquals("1", event.parameters().get("page"));
         assertEquals("active", event.parameters().get("filter"));
@@ -166,7 +166,7 @@ class HttpInstrumentationIntegrationTest {
 
         public String getHeader(String name) {
             List<String> values = headers.get(name);
-            return values == null || values.isEmpty() ? null : values.getFirst();
+            return values == null || values.isEmpty() ? null : values.get(0);
         }
 
         public String getAuthType() {

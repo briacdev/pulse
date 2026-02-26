@@ -1,24 +1,40 @@
 package com.pulse.agent.instrumentation;
 
-import lombok.RequiredArgsConstructor;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
-import java.util.Map;
-
-@RequiredArgsConstructor
 public final class WebTransactionAdvice {
 
+    private WebTransactionAdvice() {
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Origin("#t.#m") String origin,
-                               @Advice.Argument(value = 0, optional = true) Object request) {
+    public static void onEnterAdvice(@Advice.Origin("#t.#m") String origin,
+                                     @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object[] args) {
+        Object request = args != null && args.length > 0 ? args[0] : null;
         Object effectiveRequest = HttpTransactionSupport.prepareRequest(request);
+        if (args != null && args.length > 0) {
+            args[0] = effectiveRequest;
+        }
         HttpTransactionSupport.onEnter(origin, effectiveRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Argument(value = 0, optional = true) Object request,
-                              @Advice.Argument(value = 1, optional = true) Object response,
-                              @Advice.Thrown Throwable thrown) {
+    public static void onExitAdvice(@Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
+                                    @Advice.Thrown Throwable thrown) {
+        Object request = args != null && args.length > 0 ? args[0] : null;
+        Object response = args != null && args.length > 1 ? args[1] : null;
+        HttpTransactionSupport.onExit(request, response, thrown);
+    }
+
+    // Helper entrypoint used by local tests without ByteBuddy weaving.
+    public static void onEnter(String origin, Object request) {
+        Object effectiveRequest = HttpTransactionSupport.prepareRequest(request);
+        HttpTransactionSupport.onEnter(origin, effectiveRequest);
+    }
+
+    // Helper entrypoint used by local tests without ByteBuddy weaving.
+    public static void onExit(Object request, Object response, Throwable thrown) {
         HttpTransactionSupport.onExit(request, response, thrown);
     }
 }

@@ -1,4 +1,33 @@
+# Build outputs
 target/
+out/
+
+# Local Maven cache for this repo
 .m2-repo/
+
+# IDE / editor files
+.idea/
+.vscode/
 *.iml
+*.ipr
+*.iws
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Temporary files
+tmp/
+temp/
+*.swp
+*.swo
+*~

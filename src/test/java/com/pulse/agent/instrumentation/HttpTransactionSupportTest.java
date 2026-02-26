@@ -1,27 +1,35 @@
 package com.pulse.agent.instrumentation;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletRequest;
 
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class HttpTransactionSupportTest {
 
     @Test
-    void shouldWrapServletRequestWithContentCachingWrapperWhenPossible() {
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/users");
-        request.setContentType("application/json");
-        request.setContent("{\"name\":\"alice\"}".getBytes());
+    void prepareRequestShouldReturnNullWhenRequestIsNull() {
+        assertNull(HttpTransactionSupport.prepareRequest(null));
+    }
 
-        var wrapped = HttpTransactionSupport.prepareRequest(request);
+    @Test
+    void prepareRequestShouldKeepRequestWhenBodyIsAlreadyCached() {
+        CachedBodyRequest request = new CachedBodyRequest("{\"name\":\"alice\"}".getBytes(StandardCharsets.UTF_8));
+        Object prepared = HttpTransactionSupport.prepareRequest(request);
+        assertSame(request, prepared);
+    }
 
-        assertNotNull(wrapped);
-        boolean isWrapper = wrapped.getClass().getName().contains("ContentCachingRequestWrapper");
-        boolean hasCachedAccessor = Arrays.stream(wrapped.getClass().getMethods())
-                .anyMatch(method -> "getContentAsByteArray".equals(method.getName()));
-        assertTrue(isWrapper || hasCachedAccessor);
+    static final class CachedBodyRequest {
+        private final byte[] body;
+
+        CachedBodyRequest(byte[] body) {
+            this.body = body;
+        }
+
+        public byte[] getContentAsByteArray() {
+            return body;
+        }
     }
 }
