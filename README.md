@@ -164,22 +164,16 @@ Verify packaging:
 - Change `port` in `-javaagent` args, for example:
   - `port=17322`
 
-## Roadmap (idea)
-
-- CSV/JSON snapshot export
-- Finer per-endpoint profiling
-- Simple local alerts (threshold-based)
-
 ## Contribution
 
 Issues and PRs are welcome.
 
 Recommended guidelines:
 
-- Keep the project free of cloud/collector dependencies
+- Keep the project free of dependencies
 - Preserve local startup simplicity
 - Add/update tests for each instrumentation change
 
 ## License
 
-Apache 2.0
+Apache License 2.0. See [LICENSE](./LICENSE).
