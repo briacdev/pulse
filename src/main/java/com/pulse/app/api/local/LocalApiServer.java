@@ -46,6 +46,73 @@ public final class LocalApiServer implements AutoCloseable {
         this.server.createContext("/", this::handle);
     }
 
+    private static void writeJson(HttpExchange exchange, int status, Object payload) throws IOException {
+        byte[] body = OBJECT_MAPPER.writeValueAsBytes(payload);
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        exchange.sendResponseHeaders(status, body.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(body);
+        }
+    }
+
+    private static void writeText(HttpExchange exchange, int status, String text) throws IOException {
+        byte[] body = text == null ? new byte[0] : text.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+        exchange.sendResponseHeaders(status, body.length);
+        try (OutputStream output = exchange.getResponseBody()) {
+            output.write(body);
+        }
+    }
+
+    private static void writeStatus(HttpExchange exchange, int status) throws IOException {
+        exchange.sendResponseHeaders(status, -1);
+    }
+
+    private static boolean isSafePath(String path) {
+        return path != null
+                && !path.isBlank()
+                && path.startsWith("/")
+                && !path.contains("..");
+    }
+
+    private static String normalizePath(String path) {
+        if (path == null || path.isBlank()) {
+            return "/";
+        }
+        if (path.startsWith("/")) {
+            return path;
+        }
+        return "/" + path;
+    }
+
+    private static String contentType(String resourcePath) {
+        if (resourcePath.endsWith(".html")) {
+            return "text/html; charset=utf-8";
+        }
+        if (resourcePath.endsWith(".css")) {
+            return "text/css; charset=utf-8";
+        }
+        if (resourcePath.endsWith(".js")) {
+            return "application/javascript; charset=utf-8";
+        }
+        if (resourcePath.endsWith(".json")) {
+            return "application/json; charset=utf-8";
+        }
+        if (resourcePath.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        if (resourcePath.endsWith(".woff2")) {
+            return "font/woff2";
+        }
+        if (resourcePath.endsWith(".woff")) {
+            return "font/woff";
+        }
+        if (resourcePath.endsWith(".ttf")) {
+            return "font/ttf";
+        }
+        return "application/octet-stream";
+    }
+
     public void start() {
         server.start();
     }
@@ -146,72 +213,5 @@ public final class LocalApiServer implements AutoCloseable {
                 output.write(body);
             }
         }
-    }
-
-    private static void writeJson(HttpExchange exchange, int status, Object payload) throws IOException {
-        byte[] body = OBJECT_MAPPER.writeValueAsBytes(payload);
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
-        exchange.sendResponseHeaders(status, body.length);
-        try (OutputStream output = exchange.getResponseBody()) {
-            output.write(body);
-        }
-    }
-
-    private static void writeText(HttpExchange exchange, int status, String text) throws IOException {
-        byte[] body = text == null ? new byte[0] : text.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
-        exchange.sendResponseHeaders(status, body.length);
-        try (OutputStream output = exchange.getResponseBody()) {
-            output.write(body);
-        }
-    }
-
-    private static void writeStatus(HttpExchange exchange, int status) throws IOException {
-        exchange.sendResponseHeaders(status, -1);
-    }
-
-    private static boolean isSafePath(String path) {
-        return path != null
-                && !path.isBlank()
-                && path.startsWith("/")
-                && !path.contains("..");
-    }
-
-    private static String normalizePath(String path) {
-        if (path == null || path.isBlank()) {
-            return "/";
-        }
-        if (path.startsWith("/")) {
-            return path;
-        }
-        return "/" + path;
-    }
-
-    private static String contentType(String resourcePath) {
-        if (resourcePath.endsWith(".html")) {
-            return "text/html; charset=utf-8";
-        }
-        if (resourcePath.endsWith(".css")) {
-            return "text/css; charset=utf-8";
-        }
-        if (resourcePath.endsWith(".js")) {
-            return "application/javascript; charset=utf-8";
-        }
-        if (resourcePath.endsWith(".json")) {
-            return "application/json; charset=utf-8";
-        }
-        if (resourcePath.endsWith(".svg")) {
-            return "image/svg+xml";
-        }
-        if (resourcePath.endsWith(".woff2")) {
-            return "font/woff2";
-        }
-        if (resourcePath.endsWith(".woff")) {
-            return "font/woff";
-        }
-        if (resourcePath.endsWith(".ttf")) {
-            return "font/ttf";
-        }
-        return "application/octet-stream";
     }
 }

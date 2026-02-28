@@ -9,32 +9,23 @@ public final class WebTransactionAdvice {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnterAdvice(@Advice.Origin("#t.#m") String origin,
-                                     @Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object[] args) {
-        Object request = args != null && args.length > 0 ? args[0] : null;
-        Object effectiveRequest = HttpTransactionSupport.prepareRequest(request);
-        if (args != null && args.length > 0) {
-            args[0] = effectiveRequest;
-        }
-        HttpTransactionSupport.onEnter(origin, effectiveRequest);
+    public static void onEnterAdvice(@Advice.AllArguments(readOnly = false, typing = Assigner.Typing.DYNAMIC) Object[] args) {
+        HttpAdviceBridge.onEnter(args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExitAdvice(@Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args,
                                     @Advice.Thrown Throwable thrown) {
-        Object request = args != null && args.length > 0 ? args[0] : null;
-        Object response = args != null && args.length > 1 ? args[1] : null;
-        HttpTransactionSupport.onExit(request, response, thrown);
+        HttpAdviceBridge.onExit(args, thrown);
     }
 
     // Helper entrypoint used by local tests without ByteBuddy weaving.
     public static void onEnter(String origin, Object request) {
-        Object effectiveRequest = HttpTransactionSupport.prepareRequest(request);
-        HttpTransactionSupport.onEnter(origin, effectiveRequest);
+        HttpAdviceBridge.onEnter(request);
     }
 
     // Helper entrypoint used by local tests without ByteBuddy weaving.
     public static void onExit(Object request, Object response, Throwable thrown) {
-        HttpTransactionSupport.onExit(request, response, thrown);
+        HttpAdviceBridge.onExit(request, response, thrown);
     }
 }

@@ -25,6 +25,7 @@ public class StatementExecutionAdvice {
         }
         return new SqlExecutionState(System.nanoTime(), normalized, type);
     }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.This Object statement,
                               @Advice.Enter SqlExecutionState state,
@@ -45,6 +46,7 @@ public class StatementExecutionAdvice {
                 context
         );
     }
+
     public record SqlExecutionState(long startNs,
                                     String normalizedSql,
                                     SqlType sqlType) {

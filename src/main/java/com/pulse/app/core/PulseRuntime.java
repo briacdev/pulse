@@ -20,27 +20,34 @@ public final class PulseRuntime {
         refreshMonitoredAppName();
         httpStackProfiler = new HttpStackProfilerService();
     }
+
     public static PulseConfig getConfig() {
         return config;
     }
+
     public static SqlCollectorService getCollector() {
         return collector;
     }
+
     public static HttpPerfCollectorService getHttpCollector() {
         return httpCollector;
     }
+
     public static JvmMetricsService getJvmMetrics() {
         return jvmMetrics;
     }
+
     public static String monitoredAppName() {
         return monitoredAppName;
     }
+
     public static void refreshMonitoredAppName() {
         String detected = PulseConfig.detectRunningAppName();
         if (detected != null && !detected.isBlank()) {
             monitoredAppName = detected;
         }
     }
+
     public static HttpStackProfilerService getHttpStackProfiler() {
         return httpStackProfiler;
     }

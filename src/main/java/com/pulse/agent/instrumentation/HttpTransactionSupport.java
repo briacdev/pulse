@@ -8,18 +8,7 @@ import com.pulse.app.model.http.HttpRequestEvent;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.*;
 
 public final class HttpTransactionSupport {
     private static final ThreadLocal<Integer> REQUEST_DEPTH = ThreadLocal.withInitial(() -> 0);
@@ -42,16 +31,10 @@ public final class HttpTransactionSupport {
             "audio/",
             "video/"
     );
-    private static final AtomicLong ENTER_TOTAL = new AtomicLong();
-    private static final AtomicLong ENTER_ROOT = new AtomicLong();
-    private static final AtomicLong EXIT_TOTAL = new AtomicLong();
-    private static final AtomicLong EXIT_ROOT = new AtomicLong();
-    private static final AtomicLong RECORDED = new AtomicLong();
-    private static final AtomicLong IGNORED_INTERNAL = new AtomicLong();
-    private static final AtomicLong RECORD_ERRORS = new AtomicLong();
-    private static final ConcurrentHashMap<String, AtomicLong> ORIGIN_HITS = new ConcurrentHashMap<>();
-    private static volatile String lastError = "";
-    private static volatile String lastOrigin = "";
+
+    private HttpTransactionSupport() {
+    }
+
     public static Object prepareRequest(Object request) {
         if (request == null) {
             return null;
@@ -75,16 +58,13 @@ public final class HttpTransactionSupport {
             return request;
         }
     }
-    public static void onEnter(String origin, Object request) {
-        ENTER_TOTAL.incrementAndGet();
-        lastOrigin = origin;
-        ORIGIN_HITS.computeIfAbsent(origin, key -> new AtomicLong()).incrementAndGet();
+
+    public static void onEnter(Object request) {
         int depth = REQUEST_DEPTH.get();
         REQUEST_DEPTH.set(depth + 1);
         if (depth > 0) {
             return;
         }
-        ENTER_ROOT.incrementAndGet();
         String method = safeString(readMethod(request, "getMethod"));
         String path = safeString(readMethod(request, "getRequestURI"));
         String handler = safeString(readMethod(request, "getAttribute",
@@ -94,7 +74,6 @@ public final class HttpTransactionSupport {
         RequestCapture capture = captureRequest(request);
         boolean ignoredInternal = isInternalPulseRequest(request, path);
         if (ignoredInternal) {
-            IGNORED_INTERNAL.incrementAndGet();
             ACTIVE_STATE.set(new RequestState(
                     null,
                     System.nanoTime(),
@@ -112,8 +91,7 @@ public final class HttpTransactionSupport {
         HttpStackProfilerService.Handle stackHandle = null;
         try {
             stackHandle = PulseRuntime.getHttpStackProfiler().start(Thread.currentThread());
-        } catch (Throwable error) {
-            lastError = "onEnter start profiler: " + error.getClass().getSimpleName() + " - " + error.getMessage();
+        } catch (Throwable ignored) {
         }
         HttpContextHolder.set(new HttpRequestContext(endpoint, handler, null, traceId));
         ACTIVE_STATE.set(new RequestState(
@@ -129,10 +107,10 @@ public final class HttpTransactionSupport {
                 false
         ));
     }
+
     public static void onExit(Object request,
                               Object response,
                               Throwable thrown) {
-        EXIT_TOTAL.incrementAndGet();
         int depth = REQUEST_DEPTH.get() - 1;
         if (depth <= 0) {
             REQUEST_DEPTH.remove();
@@ -142,7 +120,6 @@ public final class HttpTransactionSupport {
         if (depth > 0) {
             return;
         }
-        EXIT_ROOT.incrementAndGet();
         RequestState state = ACTIVE_STATE.get();
         ACTIVE_STATE.remove();
         if (state == null) {
@@ -168,8 +145,7 @@ public final class HttpTransactionSupport {
             } else {
                 PulseRuntime.getHttpStackProfiler().popBySpanId(state.traceId);
             }
-        } catch (Throwable error) {
-            lastError = "onExit collect profiler: " + error.getClass().getSimpleName() + " - " + error.getMessage();
+        } catch (Throwable ignored) {
         }
         HttpRequestEvent event = new HttpRequestEvent(
                 state.traceId,
@@ -196,43 +172,18 @@ public final class HttpTransactionSupport {
                     profile == null ? null : profile.hotspots(),
                     profile == null ? null : profile.stacks()
             );
-            RECORDED.incrementAndGet();
-        } catch (Throwable error) {
-            RECORD_ERRORS.incrementAndGet();
-            lastError = "onExit record: " + error.getClass().getSimpleName() + " - " + error.getMessage();
+        } catch (Throwable ignored) {
         } finally {
             HttpContextHolder.clear();
         }
     }
-    static Map<String, Object> debugCounters() {
-        Map<String, Object> output = new LinkedHashMap<>();
-        output.put("enterTotal", ENTER_TOTAL.get());
-        output.put("enterRoot", ENTER_ROOT.get());
-        output.put("exitTotal", EXIT_TOTAL.get());
-        output.put("exitRoot", EXIT_ROOT.get());
-        output.put("recorded", RECORDED.get());
-        output.put("ignoredInternal", IGNORED_INTERNAL.get());
-        output.put("recordErrors", RECORD_ERRORS.get());
-        output.put("activeDepthCurrentThread", REQUEST_DEPTH.get());
-        output.put("activeStateCurrentThread", ACTIVE_STATE.get() != null);
-        output.put("lastOrigin", lastOrigin);
-        output.put("originHitsTop", topOriginHits());
-        output.put("lastError", lastError);
-        return output;
-    }
-    private static Map<String, Long> topOriginHits() {
-        Map<String, Long> top = new LinkedHashMap<>();
-        ORIGIN_HITS.entrySet().stream()
-                .sorted(Comparator.comparingLong((Map.Entry<String, AtomicLong> e) -> e.getValue().get()).reversed())
-                .limit(8)
-                .forEach(entry -> top.put(entry.getKey(), entry.getValue().get()));
-        return top;
-    }
+
     private static String endpointName(String method, String path) {
         String effectiveMethod = method == null || method.isBlank() ? "UNKNOWN" : method;
         String effectivePath = path == null || path.isBlank() ? "/" : path;
         return effectiveMethod + " " + effectivePath;
     }
+
     private static String safeString(Object value) {
         if (value == null) {
             return "";
@@ -240,6 +191,7 @@ public final class HttpTransactionSupport {
         String asString = String.valueOf(value);
         return asString == null ? "" : asString;
     }
+
     private static Object readMethod(Object target, String methodName) {
         if (target == null) {
             return null;
@@ -252,6 +204,7 @@ public final class HttpTransactionSupport {
             return null;
         }
     }
+
     private static Object readMethod(Object target, String methodName, String arg) {
         if (target == null) {
             return null;
@@ -264,6 +217,7 @@ public final class HttpTransactionSupport {
             return null;
         }
     }
+
     private static Integer readInteger(Object target, String methodName) {
         Object raw = readMethod(target, methodName);
         if (raw instanceof Number number) {
@@ -271,6 +225,7 @@ public final class HttpTransactionSupport {
         }
         return null;
     }
+
     private static boolean isInternalPulseRequest(Object request, String path) {
         Integer localPort = readInteger(request, "getLocalPort");
         if (localPort == null) {
@@ -280,6 +235,7 @@ public final class HttpTransactionSupport {
                 && localPort == PulseRuntime.getConfig().port()
                 && (path == null || path.isBlank() || path.startsWith("/") || "unknown".equalsIgnoreCase(path));
     }
+
     private static RequestCapture captureRequest(Object request) {
         String queryString = truncate(safeString(readMethod(request, "getQueryString")), MAX_CAPTURED_VALUE_LEN);
         Map<String, String> parameters = captureParameters(request);
@@ -287,6 +243,7 @@ public final class HttpTransactionSupport {
         String auth = captureAuth(request, headers);
         return new RequestCapture(queryString, parameters, headers, auth);
     }
+
     private static Map<String, String> captureParameters(Object request) {
         Object raw = readMethod(request, "getParameterMap");
         if (!(raw instanceof Map<?, ?> map) || map.isEmpty()) {
@@ -309,6 +266,7 @@ public final class HttpTransactionSupport {
         }
         return out.isEmpty() ? Map.of() : Map.copyOf(out);
     }
+
     private static Map<String, String> captureHeaders(Object request) {
         Object namesRaw = readMethod(request, "getHeaderNames");
         if (!(namesRaw instanceof Enumeration<?> names)) {
@@ -332,6 +290,7 @@ public final class HttpTransactionSupport {
         }
         return out.isEmpty() ? Map.of() : Map.copyOf(out);
     }
+
     private static String captureAuth(Object request, Map<String, String> headers) {
         String authType = truncate(safeString(readMethod(request, "getAuthType")), MAX_CAPTURED_VALUE_LEN);
         String principal = principalName(readMethod(request, "getUserPrincipal"));
@@ -353,6 +312,7 @@ public final class HttpTransactionSupport {
         }
         return String.join(" | ", parts);
     }
+
     private static String captureRequestBody(Object request, Map<String, String> parameters) {
         String contentType = safeString(readMethod(request, "getContentType")).toLowerCase(Locale.ROOT);
         if (isBinaryContentType(contentType)) {
@@ -368,6 +328,7 @@ public final class HttpTransactionSupport {
         }
         return null;
     }
+
     private static boolean isBinaryContentType(String contentType) {
         if (contentType == null || contentType.isBlank()) {
             return false;
@@ -379,6 +340,7 @@ public final class HttpTransactionSupport {
         }
         return false;
     }
+
     private static byte[] readCachedBodyBytes(Object request, int depth) {
         if (request == null || depth > 3) {
             return null;
@@ -398,6 +360,7 @@ public final class HttpTransactionSupport {
         }
         return null;
     }
+
     private static String readHeaderValues(Object request, String headerName) {
         Object raw = readMethod(request, "getHeaders", headerName);
         if (raw instanceof Enumeration<?> values) {
@@ -414,6 +377,7 @@ public final class HttpTransactionSupport {
         }
         return truncate(safeString(readMethod(request, "getHeader", headerName)).trim(), MAX_CAPTURED_VALUE_LEN);
     }
+
     private static String principalName(Object principal) {
         if (principal == null) {
             return "";
@@ -424,6 +388,7 @@ public final class HttpTransactionSupport {
         }
         return truncate(safeString(principal), MAX_CAPTURED_VALUE_LEN);
     }
+
     private static String maskAuthorization(String value) {
         if (value == null || value.isBlank()) {
             return "";
@@ -444,6 +409,7 @@ public final class HttpTransactionSupport {
         }
         return trimmed.substring(0, 8) + "...";
     }
+
     private static String stringifyMultiValue(Object value) {
         if (value == null) {
             return "";
@@ -477,6 +443,7 @@ public final class HttpTransactionSupport {
         }
         return truncate(safeString(value), MAX_CAPTURED_VALUE_LEN);
     }
+
     private static String joinMap(Map<String, String> values, String pairSeparator, String keyValueSeparator) {
         if (values == null || values.isEmpty()) {
             return "";
@@ -492,6 +459,7 @@ public final class HttpTransactionSupport {
         }
         return builder.toString();
     }
+
     private static String sanitizeBody(String body) {
         if (body == null || body.isBlank()) {
             return null;
@@ -502,6 +470,7 @@ public final class HttpTransactionSupport {
         }
         return cleaned;
     }
+
     private static String truncate(String value, int maxLen) {
         if (value == null) {
             return "";
@@ -511,6 +480,7 @@ public final class HttpTransactionSupport {
         }
         return value.substring(0, maxLen) + "...";
     }
+
     private record RequestState(HttpStackProfilerService.Handle stackHandle,
                                 long startNs,
                                 String endpoint,
@@ -522,6 +492,7 @@ public final class HttpTransactionSupport {
                                 String auth,
                                 boolean ignoredInternal) {
     }
+
     private record RequestCapture(String queryString,
                                   Map<String, String> parameters,
                                   Map<String, String> headers,

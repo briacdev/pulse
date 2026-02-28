@@ -6,43 +6,44 @@ import com.pulse.agent.instrumentation.StatementExecutionAdvice;
 import com.pulse.agent.instrumentation.WebTransactionAdvice;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.utility.JavaModule;
 
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayDeque;
-import java.util.concurrent.atomic.AtomicLong;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.nameContains;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public final class PulseInstrumentationInstaller {
-    private static final AtomicLong DISCOVERED = new AtomicLong();
-    private static final AtomicLong TRANSFORMED = new AtomicLong();
-    private static final AtomicLong IGNORED = new AtomicLong();
-    private static final AtomicLong ERRORS = new AtomicLong();
-    private static final AtomicLong HTTP_TRANSFORMED = new AtomicLong();
-    private static final AtomicLong SQL_TRANSFORMED = new AtomicLong();
-    private static final Object HTTP_TYPES_LOCK = new Object();
-    private static final ArrayDeque<String> HTTP_TYPES = new ArrayDeque<>();
+
+    private PulseInstrumentationInstaller() {
+    }
+
     public static void install(Instrumentation instrumentation) {
         AgentBuilder builder = new AgentBuilder.Default()
                 .ignore(nameContains("net.bytebuddy.")
                         .or(nameContains("com.pulse.")));
-        builder = builder
+
+        builder = installSqlPreparationAdvice(builder);
+        builder = installSqlExecutionAdvice(builder);
+        builder = installDispatcherAdvice(builder);
+        builder = installServletAdvice(builder);
+
+        builder.with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+                .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
+                .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
+                .installOn(instrumentation);
+    }
+
+    private static AgentBuilder installSqlPreparationAdvice(AgentBuilder builder) {
+        return builder
                 .type(hasSuperType(named("java.sql.Connection")).and(not(isInterface())))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
                         .visit(Advice.to(PrepareStatementAdvice.class).on(
                                 named("prepareStatement").and(takesArguments(1)).and(takesArgument(0, String.class))
                                         .or(named("prepareCall").and(takesArguments(1)).and(takesArgument(0, String.class)))
                         )));
-        builder = builder
+    }
+
+    private static AgentBuilder installSqlExecutionAdvice(AgentBuilder builder) {
+        return builder
                 .type(hasSuperType(named("java.sql.Statement")).and(not(isInterface())))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
                         .visit(Advice.to(StatementExecutionAdvice.class).on(
@@ -53,69 +54,19 @@ public final class PulseInstrumentationInstaller {
                                         .or(named("executeBatch"))
                                         .or(named("executeLargeBatch"))
                         )));
-        builder = builder
+    }
+
+    private static AgentBuilder installDispatcherAdvice(AgentBuilder builder) {
+        return builder
                 .type(named("org.springframework.web.servlet.DispatcherServlet"))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
                         .visit(Advice.to(DispatcherServletAdvice.class).on(named("doDispatch").and(takesArguments(2)))));
-        builder = builder
+    }
+
+    private static AgentBuilder installServletAdvice(AgentBuilder builder) {
+        return builder
                 .type(named("jakarta.servlet.http.HttpServlet"))
                 .transform((builder1, typeDescription, classLoader, module, protectionDomain) -> builder1
                         .visit(Advice.to(WebTransactionAdvice.class).on(named("service").and(takesArguments(2)))));
-        AgentBuilder.Listener listener = new AgentBuilder.Listener() {
-            @Override
-            public void onDiscovery(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-                DISCOVERED.incrementAndGet();
-            }
-            @Override
-            public void onTransformation(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, boolean loaded, DynamicType dynamicType) {
-                TRANSFORMED.incrementAndGet();
-                String typeName = typeDescription.getName();
-                if (isHttpTarget(typeName)) {
-                    HTTP_TRANSFORMED.incrementAndGet();
-                    rememberHttpType(typeName);
-                }
-                if (isSqlTarget(typeName)) {
-                    SQL_TRANSFORMED.incrementAndGet();
-                }
-            }
-            @Override
-            public void onIgnored(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, boolean loaded) {
-                IGNORED.incrementAndGet();
-            }
-            @Override
-            public void onError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
-                ERRORS.incrementAndGet();
-            }
-            @Override
-            public void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
-        };
-        builder.with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-                .with(AgentBuilder.InitializationStrategy.NoOp.INSTANCE)
-                .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
-                .with(listener)
-                .installOn(instrumentation);
-    }
-    private static void rememberHttpType(String typeName) {
-        synchronized (HTTP_TYPES_LOCK) {
-            HTTP_TYPES.addLast(typeName);
-            while (HTTP_TYPES.size() > 24) {
-                HTTP_TYPES.removeFirst();
-            }
-        }
-    }
-    private static boolean isHttpTarget(String typeName) {
-        return "org.springframework.web.servlet.DispatcherServlet".equals(typeName)
-                || "org.springframework.web.servlet.FrameworkServlet".equals(typeName)
-                || "jakarta.servlet.http.HttpServlet".equals(typeName)
-                || "org.apache.catalina.core.ApplicationFilterChain".equals(typeName)
-                || "org.apache.catalina.core.StandardWrapperValve".equals(typeName)
-                || "org.apache.catalina.connector.CoyoteAdapter".equals(typeName)
-                || typeName.startsWith("org.springframework.web.servlet.");
-    }
-    private static boolean isSqlTarget(String typeName) {
-        return typeName != null
-                && (typeName.startsWith("java.sql.")
-                || typeName.startsWith("org.h2.")
-                || typeName.startsWith("com.zaxxer.hikari."));
     }
 }
