@@ -44,7 +44,7 @@ PULSE attaches as a `-javaagent` when a Java/Spring Boot application starts, col
 Generated agent JAR:
 
 ```text
-target/pulse-0.1.0-agent.jar
+target/pulse-1.0.0-agent.jar
 ```
 
 ## Quick start
@@ -60,7 +60,7 @@ cd /path/to/pulse
 
 ```bash
 java \
-  -javaagent:/path/to/pulse/target/pulse-0.1.0-agent.jar=port=17321,bind=127.0.0.1,retentionMs=900000,slowMs=300,slowHttpMs=500,sampleRate=1.0 \
+  -javaagent:/path/to/pulse/target/pulse-1.0.0-agent.jar=port=17321,bind=127.0.0.1,retentionMs=900000,slowMs=300,slowHttpMs=500,sampleRate=1.0 \
   -jar /path/to/your-app.jar
 ```
 

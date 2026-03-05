@@ -5,7 +5,7 @@
 
     <groupId>com.pulse</groupId>
     <artifactId>pulse</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <name>pulse</name>
     <description>Portable Local Java APM agent for Spring Boot applications</description>
 
