@@ -60,7 +60,7 @@ cd /path/to/pulse
 
 ```bash
 java \
-  -javaagent:/path/to/pulse/target/pulse-1.0.0-agent.jar=port=17321,bind=127.0.0.1,retentionMs=900000,slowMs=300,slowHttpMs=500,sampleRate=1.0 \
+  -javaagent:/path/to/pulse/target/pulse-1.0.0-agent.jar=port=17321 \
   -jar /path/to/your-app.jar
 ```
 
