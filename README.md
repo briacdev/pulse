@@ -1,5 +1,7 @@
 # PULSE - Local Java APM Agent (Spring Boot 3+)
 
+![PULSE preview](./preview.png)
+
 Local, offline Java APM with no external service.
 
 PULSE attaches as a `-javaagent` when a Java/Spring Boot application starts, collects SQL/HTTP/JVM metrics, and exposes a simple local web UI.
